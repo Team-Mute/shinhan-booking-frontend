@@ -146,4 +146,5 @@ const InputWrapper = styled.div`
   display: flex;
   flex-direction: column;
   margin-top: 12px;
+  width: 353px;
 `;
