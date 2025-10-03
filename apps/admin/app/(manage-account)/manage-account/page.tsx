@@ -14,8 +14,8 @@ export default function ManageAccountPage() {
   useEffect(() => {
     const fetchAccount = async () => {
       try {
-        const { data } = await getAdminAccountApi();
-        setAccountInfo(data);
+        const response = await getAdminAccountApi();
+        setAccountInfo(response);
       } catch (err) {
         console.error("계정 정보 불러오기 실패:", err);
       }
