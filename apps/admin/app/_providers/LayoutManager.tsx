@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import AdminSidebar from "./AdminSidebar";
 import AdminProvider from "./AdminProvider";
 import InfoModal from "@admin/components/modal/InfoModal";
-import { AUTH_FREE_PAGES } from "@admin/lib/constants/routes";
+import { SIDEBAR_FREE_PAGES } from "@admin/lib/constants/routes";
 
 /**
  * LayoutManager 컴포넌트
@@ -25,12 +25,12 @@ import { AUTH_FREE_PAGES } from "@admin/lib/constants/routes";
  */
 export default function LayoutManager({ children }: Props) {
   const pathname = usePathname();
-  const isAuthFreePage = AUTH_FREE_PAGES.includes(pathname);
+  const isSidebarFreePage = SIDEBAR_FREE_PAGES.includes(pathname);
 
   return (
     <AdminProvider>
       <InfoModal />
-      {isAuthFreePage ? (
+      {isSidebarFreePage ? (
         <main>{children}</main>
       ) : (
         <AdminSidebar>{children}</AdminSidebar>
