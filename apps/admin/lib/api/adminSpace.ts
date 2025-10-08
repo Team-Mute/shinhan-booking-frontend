@@ -98,7 +98,6 @@ export async function getSpaceApi(paramsData: SpaceDetailParams) {
   const { data } = await adminAxiosClient.get(
     `/api/spaces-admin/detail/${paramsData.spaceId}`
   );
-  console.log(data);
   return data;
 }
 
@@ -109,7 +108,6 @@ export async function getAllSpaceListApi(
   const { data } = await adminAxiosClient.get("/api/spaces-admin/list", {
     params: paramsData,
   });
-  console.log("공간 전체 리스트", data);
   return data;
 }
 
