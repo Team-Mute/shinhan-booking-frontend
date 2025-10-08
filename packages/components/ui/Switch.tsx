@@ -11,8 +11,8 @@ interface SwitchProps {
 
 const Switch = ({
   initial = false,
-  width = "2.43rem",
-  height = "1.5rem",
+  width = "3.25rem",
+  height = "2rem",
   onToggle,
 }: SwitchProps) => {
   const [on, setOn] = useState(initial);
@@ -45,20 +45,20 @@ const SwitchWrapper = styled.div<{
   height: ${(props) => props.height};
   border-radius: 4.68rem;
   background-color: ${({ isOn }) =>
-    isOn ? colors.maincolor : colors.graycolor20};
+    isOn ? colors.maincolor : colors.graycolor10};
   position: relative;
   cursor: pointer;
   transition: background-color 0.3s;
 `;
 
 const SwitchCircle = styled.div<{ isOn: boolean }>`
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.5rem;
+  height: 1.5rem;
   background-color: #fff;
   border-radius: 50%;
   position: absolute;
   top: 50%; /* wrapper 세로의 절반 위치 */
   transform: translateY(-50%); /* 자기 키의 절반만큼 위로 */
-  left: ${({ isOn }) => (isOn ? "calc(100% - 1.25rem)" : "2px")};
+  left: ${({ isOn }) => (isOn ? "calc(100% - 1.8rem)" : "0.2rem")};
   transition: left 0.3s;
 `;
