@@ -4,23 +4,21 @@ import React from "react";
 import styled from "@emotion/styled";
 import { Button, Selectbox2 } from "@components";
 import Loader from "@admin/components/Loader";
-import { useSignupRole } from "../hooks/useSignupRole";
+import { useSignup } from "../hooks/useSignup";
 import { ROLES } from "@admin/lib/constants/roles";
 
 /**
  * SignupRolePage 컴포넌트
  * ----------------------------
- * 회원가입 두 번째 페이지(UI)
- * - 권한과 지역을 설정
- * - 상태 및 비즈니스 로직은 useSignupRole 훅에서 관리.
+ * 회원가입 두 번째 페이지
  *
- * @remarks
- * - View는 오직 UI 렌더링에만 집중.
- * - 상태, 비즈니스 로직, API 통신 등은 훅(useSignupRole)에서 분리 관리.
+ * @description
+ * - 권한과 지역을 설정
+ * - 상태 및 비즈니스 로직은 useSignup 훅에서 관리.
  */
 export default function SignupRolePage() {
   const { role, setRole, region, setRegion, regionOptions, handleComplete } =
-    useSignupRole();
+    useSignup();
 
   return (
     <Container>

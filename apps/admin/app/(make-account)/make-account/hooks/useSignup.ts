@@ -12,12 +12,12 @@ import { getRegionMenuListApi } from "@admin/lib/api/adminSpace";
  * useSignup 훅
  * ----------------------------
  * 관리자 생성 페이지 관련 훅
- * SignupPage와 SignupRolePage의 상태 및 로직(ViewModel)을 관리.
+ * - SignupPage와 SignupRolePage의 상태 및 로직(ViewModel)을 관리.
  *
- * 책임:
- * 1. 권한(role)과 지역(region) 상태 관리.
- * 2. 권한 변경에 따른 지역 옵션 자동 업데이트.
- * 3. 회원가입 완료 처리 (API 연동 및 라우팅).
+ * @description
+ * - 권한(role)과 지역(region) 상태 관리.
+ * - 권한 변경에 따른 지역 옵션 자동 업데이트.
+ * - 회원가입 완료 처리 (API 연동 및 라우팅).
  */
 export function useSignup() {
   const router = useRouter();

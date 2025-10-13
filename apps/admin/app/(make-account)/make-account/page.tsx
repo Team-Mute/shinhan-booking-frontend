@@ -6,18 +6,17 @@ import colors from "@styles/theme";
 import { Button, Input } from "@components";
 import { isValidEmail } from "@admin/lib/validators/email";
 import { isValidPhone } from "@admin/lib/validators/phone";
-import { useSignupRole } from "./hooks/useSignupRole";
+import { useSignup } from "./hooks/useSignup";
 
 /**
  * SignupPage 컴포넌트
  * ----------------------------
- * 회원가입 첫 페이지(UI)
+ * 회원가입 첫 번째 페이지
+ *
+ * @description
  * - 이름, 전화번호, 이메일 입력
  * - 입력값 검증 및 다음 버튼 활성화
- *
- * @remarks
- * - 상태 및 로직은 useSignupRole 훅에서 관리
- * - View는 UI 렌더링에만 집중
+ * - 상태 및 비즈니스 로직은 useSignupRole 훅에서 관리.
  */
 export default function SignupPage() {
   const {
@@ -29,7 +28,7 @@ export default function SignupPage() {
     handleEmailChange,
     isFormValid,
     handleSignUpClick,
-  } = useSignupRole();
+  } = useSignup();
 
   return (
     <Container>
