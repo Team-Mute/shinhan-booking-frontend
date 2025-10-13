@@ -1,80 +1,53 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import styled from "@emotion/styled";
 import Input from "@components/ui/input/Input";
 import Button from "@components/ui/button/Button";
 import Loader from "@admin/components/Loader";
-import { useRouter } from "next/navigation";
-import { useModalStore } from "@admin/store/modalStore";
-import { resetAdminPasswordApi } from "@admin/lib/api/admin";
+import { isValidEmail } from "@admin/lib/validators/email";
+import { useResetPassword } from "./hooks/useResetPassword";
 
+/**
+ * ResetPWPage 컴포넌트
+ * ----------------------------
+ * 관리자 비밀번호 재설정 페이지
+ * - 이메일 입력 폼 제공
+ * - 상태 및 비즈니스 로직은 useResetPassword 훅에서 관리
+ */
 export default function ResetPWPage() {
-  const { open } = useModalStore();
-
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [isEmailValid, setIsEmailValid] = useState(false);
-  const router = useRouter();
-
-  const validateEmail = (value: string) => {
-    const isValid = /\S+@\S+\.\S+/.test(value);
-    setIsEmailValid(isValid); // ✅ 여기 추가
-
-    setEmailError(!value ? "" : isValid ? "" : "이메일 형식이 맞지 않습니다.");
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEmail(value);
-    validateEmail(value);
-  };
-
-  const handleResetPW = async () => {
-    try {
-      const response = await resetAdminPasswordApi({ userEmail: email });
-
-      if (response.status === 200) {
-        open(
-          "안내",
-          "임시 비밀번호가 발송되었습니다.\n다시 로그인해주세요.",
-          () => {
-            router.push("/");
-          }
-        );
-      }
-    } catch (err: any) {
-      if (err) {
-        open("안내", "비밀번호 재설정 링크 전송에 실패했습니다.");
-      }
-    } finally {
-    }
-  };
-
+  const { email, handleEmailChange, handleResetPW } = useResetPassword();
   return (
     <Container>
       <Loader>
-        <GreetingText>비밀번호 찾기</GreetingText>
+        <TitleText>비밀번호 찾기</TitleText>
 
         <LoginForm onSubmit={(e) => e.preventDefault()}>
+          {/* 이메일 입력 */}
           <InputWrapper>
             <Input
               type="email"
               placeholder="이메일"
               value={email}
               onChange={handleEmailChange}
+              errorMessage={
+                email && !isValidEmail(email)
+                  ? "이메일 형식이 맞지 않습니다."
+                  : ""
+              }
             />
-            {emailError && <ErrorText>{emailError}</ErrorText>}
           </InputWrapper>
+          {/* 설명 텍스트 */}
           <InfoText>
             가입시 사용한 이메일 주소를 입력해주시면 비밀번호 재설정 링크를
             보내드려요.
           </InfoText>
 
+          {/* 비밀번호 재설정 버튼 */}
           <Button
             type="submit"
-            isActive={isEmailValid}
-            disabled={!isEmailValid}
+            isActive={isValidEmail(email)}
+            disabled={!isValidEmail(email)}
             onClick={handleResetPW}
           >
             비밀번호 재설정 링크 보내기
@@ -85,6 +58,7 @@ export default function ResetPWPage() {
   );
 }
 
+// --- styled ---
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -92,7 +66,7 @@ const Container = styled.div`
   padding-top: 80px;
 `;
 
-const GreetingText = styled.h2`
+const TitleText = styled.h2`
   font-size: 24px;
   line-height: 1.5;
   text-align: center;
@@ -129,11 +103,4 @@ const InputWrapper = styled.div`
   flex-direction: column;
   margin-top: 12px;
   width: 353px;
-`;
-
-const ErrorText = styled.p`
-  color: red;
-  font-size: 12px;
-  margin-top: 4px;
-  padding-left: 4px;
 `;
