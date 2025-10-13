@@ -14,7 +14,7 @@ import {
   SpaceIcon,
   AddUserIcon,
   LogoutIcon,
-} from "@admin/icons";
+} from "@admin/svg-icons";
 
 /**
  * AdminSidebar 컴포넌트
@@ -22,9 +22,10 @@ import {
  * 관리자 페이지 좌측 사이드바를 렌더링하며,
  * 메뉴 선택, 로그아웃 기능 제공.
  *
- * 1. menuItems : 각 메뉴 정보(label, path, 아이콘)
- * 2. adminRoleId : 관리자 권한 확인 (마스터 관리자면(roleId:0) 계정 생성 메뉴 노출)
- * 3. handleLogout : 로그아웃 처리 후 로그인 페이지로 이동
+ * 기능 요약:
+ * 1. menuItems : 각 메뉴 정보(label, routing path, 아이콘)
+ * 2. adminRoleId : 관리자 권한에 따라 '계정 만들기 / 계정 관리' 메뉴 분기
+ * 3. logout : 로그아웃 훅을 이용해 로그아웃 처리 후 로그인 페이지로 이동
  * 4. MenuButton : 메뉴 클릭 시 해당 페이지로 이동, 선택된 메뉴 하이라이트
  * 5. IconWrapper : SVG 아이콘 감싸기 및 선택 상태에 따라 스타일 적용
  * 6. Content : 실제 페이지 콘텐츠 영역
