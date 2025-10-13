@@ -9,6 +9,13 @@ import { useRouter } from "next/navigation";
 import { isValidEmail } from "@admin/lib/validators/email";
 import { useLogin } from "./hooks/useLogin";
 
+/**
+ * LoginPage 컴포넌트
+ * ----------------------------
+ * 관리자 로그인 페이지
+ * - 이메일과 비밀번호 입력 폼 제공
+ * - 상태 및 비즈니스 로직은 useLogin 훅에서 관리
+ */
 export default function LoginPage() {
   const {
     password,
