@@ -5,7 +5,6 @@ import { useState } from "react";
 import { IoClose } from "react-icons/io5";
 import Link from "next/link";
 import colors from "@styles/theme";
-import { useRouter } from "next/navigation";
 import { useAdminAuthStore } from "@admin/store/adminAuthStore";
 import { media } from "@styles/breakpoints";
 import {
@@ -14,7 +13,7 @@ import {
   SpaceIcon,
   AddUserIcon,
   LogoutIcon,
-} from "@admin/icons";
+} from "@admin/svg-icons";
 import { useLogout } from "@admin/lib/hooks/useLogout";
 /**
  * HeaderMobile 컴포넌트
@@ -31,7 +30,6 @@ export default function HeaderMobile() {
   const { logout } = useLogout();
   const [menuOpen, setMenuOpen] = useState(false);
   const { adminAccessToken, adminRoleId } = useAdminAuthStore();
-  const router = useRouter();
 
   const handleLogout = async () => {
     logout();
