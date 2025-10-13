@@ -1,78 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import styled from "@emotion/styled";
 import Input from "@components/ui/input/Input";
 import Button from "@components/ui/button/Button";
 import Loader from "@admin/components/Loader";
-import { useModalStore } from "@admin/store/modalStore";
 import { isValidPassword } from "@admin/lib/validators/password";
-
-import { updatePasswordApi } from "@admin/lib/api/admin";
-import { useLogout } from "@admin/lib/hooks/useLogout";
+import { useChangePW } from "./hooks/useChangePW";
 
 /**
  * ChangePWPage 컴포넌트
  * ----------------------
  * 관리자 비밀번호 재설정 페이지.
- * 사용자는 현재 비밀번호를 입력하고 새 비밀번호를 설정가능.
  *
- * 기능 요약:
- * 1. 비밀번호 유효성 검사 – `isValidPassword()`로 새 비밀번호 규칙(8자 이상, 숫자·특수문자 포함) 확인.
- * 2. 입력 폼 상태 관리 – 현재 비밀번호, 새 비밀번호, 새 비밀번호 확인 값을 `useState`로 관리.
- * 3. 비밀번호 일치 검사 – 새 비밀번호와 확인 비밀번호가 동일한지 비교.
- * 4. API 연동 – `updatePasswordApi` 호출로 서버에 비밀번호 변경 요청.
- * 5. 결과 안내 – `useModalStore`로 성공/오류 모달 표시 후, 성공 시 `logout()` 실행.
- *
- * @remarks
- * - 새 비밀번호는 보안 규칙에 맞아야 하며, 일치하지 않으면 오류 메시지를 표시.
- * - 변경 성공 시 로그인 페이지로 이동하도록 로그아웃 처리.
+ * @description
+ * - 관리자는 현재 비밀번호를 입력하고 새 비밀번호를 설정가능.
+ * - 상태 및 비즈니스 로직은 useChangePW 훅에서 관리.
  */
 export default function ChangePWPage() {
-  const { open } = useModalStore();
-  const { logout } = useLogout();
-
-  // --- 폼 상태 관리 ---
-  const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  // --- 입력값 유효성 검사 ---
-  const isFormValid =
-    password.trim() !== "" &&
-    isValidPassword(newPassword) &&
-    newPassword === confirmPassword;
-
-  /**
-   * 비밀번호 변경 요청 처리
-   * -----------------------
-   * 1. `updatePasswordApi`로 서버에 변경 요청
-   * 2. 성공 시 모달 표시 및 로그아웃 후 로그인 페이지로 이동
-   * 3. 500 오류 시 "현재 비밀번호 불일치" 안내 모달 표시
-   */
-  const handleSubmit = async () => {
-    // 폼 유효성 미충족 시 종료
-    if (!isFormValid) return;
-
-    try {
-      await updatePasswordApi({
-        password: password,
-        newPassword: newPassword,
-      });
-
-      open(
-        "비밀번호 재설정 완료",
-        "비밀번호가 재설정 완료되었습니다.\n다시 로그인 해주세요.",
-        () => {
-          logout();
-        }
-      );
-    } catch (err) {
-      if (err.status === 500) {
-        open("안내", "현재 비밀번호가 일치하지 않습니다.");
-      }
-    }
-  };
+  const {
+    password,
+    setPassword,
+    newPassword,
+    setNewPassword,
+    confirmPassword,
+    setConfirmPassword,
+    isFormValid,
+    handleSubmit,
+  } = useChangePW();
 
   return (
     <Container>
@@ -135,6 +90,7 @@ export default function ChangePWPage() {
   );
 }
 
+// --- styled ---
 const Container = styled.div`
   display: flex;
   flex-direction: column;
