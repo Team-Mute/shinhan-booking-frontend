@@ -1,45 +1,23 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import styled from "@emotion/styled";
-import { useRouter } from "next/navigation";
 import colors from "@styles/theme";
 import { GapBox } from "@admin/components/GapBox";
-import { getAdminAccountApi } from "@admin/lib/api/admin";
-import { AdminAccount } from "@admin/types/dto/admin.dto";
+import { useManageAccount } from "./hooks/useManageAccount";
+
+/**
+ * ManageAccountPage 컴포넌트
+ * ----------------------------
+ * 관리자 본인의 계정 정보 확인 페이지
+ *
+ * @description
+ * - 이름, 관리지역, 관리권한, 이메일 정보 표시.
+ * - 비밀번호 변경 버튼 제공.
+ * - 상태 및 비즈니스 로직은 useManageAccount 훅에서 관리.
+ */
 export default function ManageAccountPage() {
-  const [accountInfo, setAccountInfo] = useState<AdminAccount | null>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    const fetchAccount = async () => {
-      try {
-        const response = await getAdminAccountApi();
-        setAccountInfo(response);
-      } catch (err) {
-        console.error("계정 정보 불러오기 실패:", err);
-      }
-    };
-    fetchAccount();
-  }, []);
-
-  const handleChangePassword = () => {
-    router.push("/change-password");
-    console.log("비밀번호 변경 클릭");
-  };
-
-  const mapRoleId = (roleId: number) => {
-    switch (roleId) {
-      case 0:
-        return "마스터 계정";
-      case 1:
-        return "2차 관리자";
-      case 2:
-        return "1차 관리자";
-      default:
-        return "알 수 없음";
-    }
-  };
+  const { accountInfo, mapRoleId, handleChangePassword } = useManageAccount();
 
   if (!accountInfo) return <div>계정 정보를 불러올 수 없습니다.</div>;
 
@@ -88,6 +66,7 @@ const InfoRow = ({ label, value, action, gap = 0.5 }: InfoRowProps) => {
   );
 };
 
+// --- styled ---
 const Container = styled.div`
   display: flex;
   flex-direction: column;
