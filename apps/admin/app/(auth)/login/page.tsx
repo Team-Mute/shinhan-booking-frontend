@@ -1,46 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import styled from "@emotion/styled";
 import Input from "@components/ui/input/Input";
 import Button from "@components/ui/button/Button";
 import Loader from "@admin/components/Loader";
-import { adminLoginApi } from "@admin/lib/api/adminAuth";
 import { useRouter } from "next/navigation";
-import { useModalStore } from "@admin/store/modalStore";
-import { useApiErrorHandler } from "@admin/lib/hooks/useApiErrorHandler";
 import { isValidEmail } from "@admin/lib/validators/email";
+import { useLogin } from "./hooks/useLogin";
 
 export default function LoginPage() {
-  const { open } = useModalStore();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    password,
+    email,
+    handleEmailChange,
+    handlePasswordChange,
+    handleLogin,
+  } = useLogin();
   const router = useRouter();
-  const handleError = useApiErrorHandler();
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEmail(value);
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setPassword(value);
-  };
-
-  const handleLogin = async () => {
-    try {
-      await adminLoginApi(email, password);
-      router.push("/");
-    } catch (err: any) {
-      if (err?.status === 401) {
-        open("안내", "로그인에 실패했습니다.");
-      } else {
-        handleError(err);
-      }
-    }
-  };
 
   return (
     <Container>
@@ -57,6 +34,7 @@ export default function LoginPage() {
             handleLogin();
           }}
         >
+          {/* 이메일 입력 */}
           <InputWrapper>
             <Input
               type="email"
@@ -71,6 +49,7 @@ export default function LoginPage() {
             />
           </InputWrapper>
 
+          {/* 비밀번호 입력 */}
           <InputWrapper>
             <Input
               type="password"
@@ -80,6 +59,7 @@ export default function LoginPage() {
             />
           </InputWrapper>
 
+          {/* 비밀번호 찾기 버튼 */}
           <FindPasswordButton
             type="button"
             onClick={() => {
@@ -88,6 +68,8 @@ export default function LoginPage() {
           >
             비밀번호 찾기
           </FindPasswordButton>
+
+          {/* 로그인 버튼 */}
           <Button
             type="submit"
             isActive={isValidEmail(email) && !!password}
@@ -101,6 +83,7 @@ export default function LoginPage() {
   );
 }
 
+// --- styled ---
 const Container = styled.div`
   display: flex;
   flex-direction: column;
