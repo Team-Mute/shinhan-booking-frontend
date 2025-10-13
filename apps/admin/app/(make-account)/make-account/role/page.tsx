@@ -1,94 +1,58 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import styled from "@emotion/styled";
 import { Button, Selectbox2 } from "@components";
-import { useRouter } from "next/navigation";
-import { adminSignUpApi } from "@admin/lib/api/adminAuth";
-import { useAdminAuthStore } from "@admin/store/adminAuthStore";
 import Loader from "@admin/components/Loader";
-import { useModalStore } from "@admin/store/modalStore";
+import { useSignupRole } from "../hooks/useSignupRole";
+import { ROLES } from "@admin/lib/constants/roles";
 
+/**
+ * SignupRolePage 컴포넌트
+ * ----------------------------
+ * 회원가입 두 번째 페이지(UI)
+ * - 권한과 지역을 설정
+ * - 상태 및 비즈니스 로직은 useSignupRole 훅에서 관리.
+ *
+ * @remarks
+ * - View는 오직 UI 렌더링에만 집중.
+ * - 상태, 비즈니스 로직, API 통신 등은 훅(useSignupRole)에서 분리 관리.
+ */
 export default function SignupRolePage() {
-  const router = useRouter();
-  const { open } = useModalStore();
-
-  const [region, setRegion] = useState("");
-  const [role, setRole] = useState("");
-
-  // 관리 지역
-  const regions = [
-    { label: "서울", value: "서울" },
-    { label: "인천", value: "인천" },
-    { label: "대구", value: "대구" },
-    { label: "대전", value: "대전" },
-  ];
-
-  // 권한
-  const roles = [
-    { label: "1차 승인자", value: "2" },
-    { label: "2차 승인자", value: "1" },
-    { label: "마스터", value: "0" },
-  ];
-
-  const adminSignUpData = useAdminAuthStore((state) => state.adminSignUpData);
-  const clearAdminSignUpData = useAdminAuthStore(
-    (state) => state.clearAdminSignUpData
-  );
-
-  const handleComplete = async () => {
-    try {
-      const updatedAdminSignupData = {
-        ...adminSignUpData,
-        roleId: Number(role),
-        regionName: region,
-      };
-
-      const response = await adminSignUpApi(updatedAdminSignupData);
-      if (response.status === 201) {
-        open(
-          "회원가입 완료",
-          "환영합니다!\n이제 공간과 예약 관리를 시작해보세요.",
-          () => {
-            router.push("/make-account"); // 모달 닫히면 이동
-          }
-        );
-        clearAdminSignUpData();
-      }
-    } catch (error: any) {
-      if (error.response?.status === 400 && error.response?.data?.message) {
-        open("안내", error.response.data.message);
-      } else {
-        open("안내", "회원가입 중 오류가 발생했습니다.");
-      }
-    } finally {
-    }
-  };
+  const { role, setRole, region, setRegion, regionOptions, handleComplete } =
+    useSignupRole();
 
   return (
     <Container>
       <Loader>
         <TitleText>관리할 지역과 권한을 설정하세요</TitleText>
         <RoleForm>
-          <Selectbox2
-            options={regions}
-            value={region}
-            onChange={setRegion}
-            placeholder="관리지역 선택"
-          />
+          {/* 관리 지역 선택 */}
+          {role === "0" ? (
+            <DisabledText>관리 지역 없음</DisabledText>
+          ) : (
+            <Selectbox2
+              options={regionOptions}
+              value={region}
+              onChange={setRegion}
+              placeholder="관리지역 선택"
+            />
+          )}
           <Gap />
+          {/* 권한 설정 */}
           <Selectbox2
-            options={roles}
+            options={ROLES}
             value={role}
             onChange={setRole}
             placeholder="권한 설정"
           />
-
+          {/* 완료 버튼 */}
           <ButtonWrapper>
             <Button
               type="button"
               isActive={!!region && !!role}
               onClick={handleComplete}
+              disabled={!region || !role}
             >
               회원가입 완료
             </Button>
@@ -99,6 +63,7 @@ export default function SignupRolePage() {
   );
 }
 
+// --- styled ---
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -113,6 +78,14 @@ const TitleText = styled.h2`
   margin-top: 120px;
   margin-bottom: 24px;
   font-weight: 500;
+`;
+
+const DisabledText = styled.div`
+  padding: 12px;
+  background-color: #f5f5f5;
+  color: #999;
+  border-radius: 8px;
+  text-align: center;
 `;
 
 const RoleForm = styled.form`
