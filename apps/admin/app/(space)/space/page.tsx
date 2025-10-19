@@ -1,188 +1,153 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import SearchBar from "@components/ui/searchbar/admin/Searchbar";
+import React from "react";
 import styled from "@emotion/styled";
 import IconButton from "@components/ui/button/IconButton";
+import SearchBar from "@components/ui/searchbar/admin/Searchbar";
 import SpaceCard from "./components/SpaceCard";
-import SpaceFormModal from "./components/SpaceFormModal/index";
-import {
-  createSpaceApi,
-  getAllSpaceListApi,
-  getManagerSpaceListApi,
-  getRegionSpaceListApi,
-  updateSpaceApi,
-} from "apps/admin/lib/api/adminSpace";
-import { SpaceRequest } from "apps/admin/types/space";
-import { useAdminAuthStore } from "apps/admin/store/adminAuthStore";
-import { mapDetailToRequest } from "apps/admin/lib/utils/spaceMapper";
+import SpaceFormModal from "./components/SpaceFormModal";
+import { useSpace } from "./hooks/useSpace";
+import colors from "@styles/theme";
+import Loader from "@admin/components/Loader";
+import { GapBox } from "@admin/components/GapBox";
+import { SEARCH_OPTIONS } from "@admin/lib/constants/space";
 
-const options = [
-  { value: "all", label: "전체" },
-  { value: "space", label: "공간명" },
-  { value: "manager", label: "담당자" },
-];
-
-export default function DashboardPage() {
-  const [spaces, setSpaces] = useState<any[]>([]);
-  const [pagination, setPagination] = useState<{
-    totalPages: number;
-    totalElements: number;
-  } | null>(null);
-
-  const [filter, setFilter] = useState("all");
-  const [keyword, setKeyword] = useState("");
-
-  const [editingSpace, setEditingSpace] = useState<any | null>(null);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-
-  // ✅ 공간 리스트 불러오기
-  const { adminRoleId } = useAdminAuthStore();
-
-  useEffect(() => {
-    async function fetchSpaces() {
-      try {
-        let data: any[] = [];
-        let pagination: { totalPages: number; totalElements: number } | null =
-          null;
-
-        if (adminRoleId === 2) {
-          // 1차 승인자용
-          const regionData = await getManagerSpaceListApi();
-          const regionId = regionData[0].regionId;
-          data = await getRegionSpaceListApi(regionId); // 얘는 content 구조 아닌 것 같네?
-        } else if (adminRoleId == 0 || adminRoleId == 1) {
-          // 마스터, 2차 승인자용
-          const response = await getAllSpaceListApi();
-          data = response.content; // ✅ 리스트만
-          pagination = {
-            totalPages: response.totalPages,
-            totalElements: response.totalElements,
-          };
-        }
-
-        setSpaces(data);
-        if (pagination) {
-          setPagination(pagination); // ✅ 페이지네이션 정보 따로 저장
-        }
-      } catch (e) {
-        console.error("공간 리스트 불러오기 실패", e);
-      }
-    }
-
-    fetchSpaces();
-  }, [adminRoleId]);
-
-  const filteredSpaces = spaces.filter((space) => {
-    if (filter === "all") return true;
-    if (filter === "space") return space.spaceName?.includes(keyword);
-    if (filter === "manager") return space.userName?.includes(keyword);
-    return true;
-  });
-
-  const reloadSpaces = async () => {
-    try {
-      let data: any[] = [];
-      if (adminRoleId === 2) {
-        const regionData = await getManagerSpaceListApi();
-        const regionId = regionData.regionId;
-        data = await getRegionSpaceListApi(regionId);
-      } else if (adminRoleId === 0 || adminRoleId === 1) {
-        data = await getAllSpaceListApi();
-      }
-      setSpaces(data);
-    } catch (e) {
-      console.error("공간 리스트 불러오기 실패", e);
-    }
-  };
+/**
+ * SpacePage 컴포넌트
+ * ----------------------------
+ * 공간 관리 페이지
+ *
+ * @description
+ * - 공간 목록 조회 및 페이지네이션
+ * - 공간 검색 (지역명: 서울/인천/대전/대구)
+ * - 공간 생성 및 수정 모달 제어.
+ * - 상태 및 비즈니스 로직은 useSpace 훅에서 관리.
+ */
+export default function SpacePage() {
+  const {
+    spaceList,
+    pagination,
+    selectedRegionId,
+    keyword,
+    modalState,
+    startPage,
+    endPage,
+    setKeyword,
+    handlePageChange,
+    handlePrevGroup,
+    handleNextGroup,
+    handleOpenCreateModal,
+    handleOpenEditModal,
+    handleCloseModal,
+    handleCreateSubmit,
+    handleUpdateSubmit,
+    handleDeleteSpace,
+    handleSearch,
+    handleSelect,
+  } = useSpace();
 
   return (
     <Container>
-      <TitleWrapper>
-        <h1>공간 관리</h1>
-        <div style={{ width: "6.6rem" }}>
-          <IconButton
-            label="새 공간 등록"
-            onClick={() => setIsCreateOpen(true)}
+      <Loader>
+        {/* 타이틀 및 공간 등록 버튼 */}
+        <TitleWrapper>
+          <h1>공간 관리</h1>
+          <div style={{ width: "6.6rem" }}>
+            <IconButton label="새 공간 등록" onClick={handleOpenCreateModal} />
+          </div>
+        </TitleWrapper>
+
+        {/* 검색 바 */}
+        <SearchBarWrapper>
+          <SearchBar
+            options={SEARCH_OPTIONS}
+            selectedValue={selectedRegionId}
+            onSelectChange={handleSelect}
+            placeholder="지역명으로 검색"
+            searchValue={keyword}
+            onSearchChange={setKeyword}
+            onSearch={handleSearch}
           />
-        </div>
-      </TitleWrapper>
-      <SearchBarWrapper>
-        <SearchBar
-          options={options}
-          selectedValue={filter}
-          onSelectChange={setFilter}
-          placeholder="공간명, 담당자로 검색"
-          searchValue={keyword}
-          onSearchChange={setKeyword}
-        />
-      </SearchBarWrapper>
+        </SearchBarWrapper>
 
-      <CardContainer>
-        {filteredSpaces.map((space) => (
-          <SpaceCard
-            key={space.spaceId}
-            imageUrl={space.spaceImageUrl}
-            title={space.spaceName}
-            region={space.regionName}
-            manager={space.userName}
-            isPrivate={!space.spaceIsAvailable}
-            onEdit={() => setEditingSpace(space)}
+        {/* 공간 리스트 */}
+        <CardContainer>
+          {spaceList.map((space) => (
+            <SpaceCard
+              key={space.spaceId}
+              imageUrl={space.spaceImageUrl}
+              title={space.spaceName}
+              region={space.regionName}
+              manager={space.adminName}
+              isPrivate={!space.spaceIsAvailable}
+              onEdit={() => handleOpenEditModal(space.spaceId)}
+              onDelete={() => handleDeleteSpace(space.spaceId)}
+            />
+          ))}
+        </CardContainer>
+
+        {/* 페이지네이션 */}
+        {pagination.totalPages > 0 && (
+          <PaginationWrapper>
+            {pagination.totalPages > 1 && (
+              <PageButton disabled={startPage === 1} onClick={handlePrevGroup}>
+                <img src="/icons/prev.svg" alt="이전" width={20} height={20} />
+              </PageButton>
+            )}
+
+            {Array.from(
+              { length: endPage - startPage + 1 },
+              (_, i) => startPage + i
+            ).map((page) => (
+              <PageNumber
+                key={page}
+                active={page === pagination.currentPage}
+                onClick={() => handlePageChange(page)}
+              >
+                {page}
+              </PageNumber>
+            ))}
+
+            {pagination.totalPages > 1 && (
+              <PageButton
+                disabled={endPage >= pagination.totalPages}
+                onClick={handleNextGroup}
+              >
+                <img src="/icons/next.svg" alt="다음" width={20} height={20} />
+              </PageButton>
+            )}
+          </PaginationWrapper>
+        )}
+
+        {/* 단일 모달 컴포넌트 */}
+        {modalState.mode && (
+          <SpaceFormModal
+            isOpen={true}
+            onClose={handleCloseModal}
+            title={modalState.mode === "create" ? "새 공간 등록" : "공간 수정"}
+            initialData={modalState.initialData}
+            onSubmit={
+              modalState.mode === "create"
+                ? handleCreateSubmit
+                : handleUpdateSubmit
+            }
           />
-        ))}
-      </CardContainer>
-
-      {/* 등록 모달 */}
-      {isCreateOpen && (
-        <SpaceFormModal
-          isOpen
-          onClose={() => setIsCreateOpen(false)}
-          title="새 공간 등록"
-          initialData={undefined} // 등록은 초기값 없음
-          onSubmit={async (data: SpaceRequest) => {
-            try {
-              await createSpaceApi(data);
-              await reloadSpaces(); // 등록 후 다시 불러오기
-            } catch (e) {
-              console.error("공간 등록 실패", e);
-            } finally {
-              setIsCreateOpen(false);
-            }
-          }}
-        />
-      )}
-
-      {/* 수정 모달 */}
-      {editingSpace && (
-        <SpaceFormModal
-          isOpen
-          onClose={() => setEditingSpace(null)}
-          initialData={mapDetailToRequest(editingSpace)} // ✅ 변환해서 넘김
-          title="공간 수정"
-          spaceId={editingSpace.spaceId}
-          onSubmit={async (data: SpaceRequest, spaceId?: number) => {
-            try {
-              await updateSpaceApi(spaceId!, data);
-              await reloadSpaces();
-            } catch (e) {
-              console.error("공간 수정 실패", e);
-            } finally {
-              setEditingSpace(null);
-            }
-          }}
-        />
-      )}
+        )}
+        {/* 하단 여백 */}
+        <GapBox h="1.875rem" />
+      </Loader>
     </Container>
   );
 }
 
+// --- styled ---
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
   height: 100%;
-  //   background-color: beige;
+  overflow-y: auto;
 `;
 
 const TitleWrapper = styled.div`
@@ -201,33 +166,48 @@ const TitleWrapper = styled.div`
 const SearchBarWrapper = styled.div`
   width: 100%;
 `;
+
 const CardContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, 22rem);
   gap: 3.5rem 1rem;
   margin-top: 1.5rem;
-
   justify-content: center;
-
   width: 100%;
-  max-width: calc(3 * 22rem + 2 * 1rem); /* 카드 3개 + 간격 */
+  max-width: calc(3 * 22rem + 2 * 1rem);
   margin-left: auto;
   margin-right: auto;
-
-  /* 모바일 */
   @media (max-width: 767px) {
     gap: 1rem;
   }
 `;
 
-const ViewportBadge = styled.div`
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  background: black;
-  color: white;
-  padding: 0.3rem 0.6rem;
-  font-size: 0.9rem;
-  border-radius: 4px;
-  opacity: 0.8;
+const PageButton = styled.button<{ disabled?: boolean }>`
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: ${({ disabled }) => (disabled ? "#ccc" : colors.graycolor100)};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const PageNumber = styled.button<{ active?: boolean }>`
+  background: ${({ active }) => (active ? colors.graycolor10 : "transparent")};
+  color: ${({ active }) => (active ? colors.graycolor100 : colors.graycolor50)};
+  font-weight: 600;
+  border-radius: 2rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border: ${({ active }) =>
+    active ? `1px solid ${colors.graycolor10}` : "none"};
+`;
+
+const PaginationWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  gap: 1rem;
 `;
