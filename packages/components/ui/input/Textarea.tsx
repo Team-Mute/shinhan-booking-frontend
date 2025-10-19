@@ -2,16 +2,19 @@ import React, { InputHTMLAttributes } from "react";
 import styled from "@emotion/styled";
 import colors from "@styles/theme";
 
-interface Props extends InputHTMLAttributes<HTMLInputElement> {
-  errorMessage?: string;
-  infoMessage?: string;
+interface Props extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  placeholder?: string;
   width?: string;
 }
 
-const Textarea = ({ width = "353px" }: Props) => {
+const Textarea = ({
+  width = "353px",
+  placeholder = "내용을 입력해주세요",
+  ...props
+}: Props) => {
   return (
     <Wrapper>
-      <StyledInput width={width} />
+      <StyledTextarea width={width} placeholder={placeholder} {...props} />
     </Wrapper>
   );
 };
@@ -25,7 +28,7 @@ const Wrapper = styled.div`
   flex-direction: column;
 `;
 
-const StyledInput = styled.textarea<{ width: string }>`
+const StyledTextarea = styled.textarea<{ width: string }>`
   width: ${({ width }) => width};
   height: ${height};
   padding-left: 12px;
@@ -33,20 +36,17 @@ const StyledInput = styled.textarea<{ width: string }>`
   border: 1px solid ${colors.graycolor10};
   border-radius: 8px;
 
-
   font-size: 0.875rem;
-font-style: normal;
-font-weight: 500;
-line-height: normal;
-letter-spacing: -0.00963rem;
-  color: ${colors.graycolor100}
-
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  letter-spacing: -0.00963rem;
+  color: ${colors.graycolor100};
 
   border: 1px solid ${colors.graycolor10};
   padding: 1rem 0.75rem;
   border-radius: 0.5rem;
   min-height: 5.6rem;
-
 
   &::placeholder {
     color: #8c8f93;
