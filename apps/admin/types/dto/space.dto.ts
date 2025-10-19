@@ -30,7 +30,7 @@
  */
 
 // 운영 시간 타입
-type Operation = {
+export type Operation = {
   day: number; // 1 ~ 7
   from: string; // HH:mm ex) 09:00
   to: string;
@@ -90,7 +90,7 @@ export type SpaceUpdateBody = SpaceCreateBody & {
 export type SpaceDeleteParams = Pick<SpaceDetailResponse, "spaceId">;
 
 // 지역 타입
-type Region = {
+export type Region = {
   regionId: number;
   regionName: string;
 };
