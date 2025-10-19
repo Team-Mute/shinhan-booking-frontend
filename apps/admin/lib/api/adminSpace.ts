@@ -47,7 +47,7 @@ export async function createSpaceApi(bodyData: SpaceCreateBody) {
     "/api/spaces-admin/upload",
     formData,
     {
-      headers: { "Content-Type": "multipart/form-data" },
+      // headers: { "Content-Type": "multipart/form-data" },
     }
   );
   return response;
@@ -69,15 +69,23 @@ export async function updateSpaceApi(
   bodyData: SpaceUpdateBody
 ) {
   const formData = new FormData();
-  formData.append("space", JSON.stringify(bodyData.space));
+  formData.append(
+    "space",
+    new Blob([JSON.stringify(bodyData.space)], { type: "application/json" })
+  );
   bodyData.images.forEach((img) => formData.append("images", img));
-  formData.append("keepUrlsOrder", JSON.stringify(bodyData.keepUrlsOrder));
+  formData.append(
+    "keepUrlsOrder",
+    new Blob([JSON.stringify(bodyData.keepUrlsOrder)], {
+      type: "application/json",
+    })
+  );
 
   const { data } = await adminAxiosClient.put(
     `/api/spaces-admin/${paramsData.spaceId}`,
     formData,
     {
-      headers: { "Content-Type": "multipart/form-data" },
+      // headers: { "Content-Type": "multipart/form-data" },
     }
   );
   return data;
