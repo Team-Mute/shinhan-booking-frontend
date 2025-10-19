@@ -13,7 +13,7 @@ interface LoaderProps {
 /**
  * Loader 컴포넌트
  * ----------------
- * 역할:
+ * @description
  * 1. 전역 로딩 상태(useLoaderStore.loading)를 감지
  * 2. 로딩 중이면 FadeLoader 표시
  * 3. 로딩이 끝나면 children을 렌더링
@@ -21,19 +21,21 @@ interface LoaderProps {
 const Loader: React.FC<LoaderProps> = ({ children }) => {
   const { loading } = useLoaderStore();
 
-  if (loading) {
-    return (
-      <Overlay>
-        <FadeLoader color={colors.maincolor} />
-      </Overlay>
-    );
-  }
-
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {loading && (
+        <Overlay>
+          <FadeLoader color={colors.maincolor} />
+        </Overlay>
+      )}
+    </>
+  );
 };
 
 export default Loader;
 
+// --- styled ---
 const Overlay = styled.div`
   position: fixed;
   top: 0;
