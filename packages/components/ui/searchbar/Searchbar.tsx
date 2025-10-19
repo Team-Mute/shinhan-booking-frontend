@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import styled from "@emotion/styled";
 import colors from "@styles/theme";
 import { SlArrowDown, SlArrowUp } from "react-icons/sl";
@@ -18,21 +18,25 @@ interface SearchBarProps {
   placeholder?: string;
   searchValue: string;
   onSearchChange: (value: string) => void;
+  onSearch?: () => void; // Enter 시 실행될 콜백
 }
 
 export default function SearchBar({
   options,
   selectedValue,
   onSelectChange,
-  placeholder = "공간명, 담당자로 검색",
+  placeholder = "검색어를 입력하세요.",
   searchValue,
   onSearchChange,
+  onSearch,
 }: SearchBarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const handleToggle = () => setIsOpen((prev) => !prev);
-  const handleSelect = (val: string) => {
+  const handleSelect = (val: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // 상위 클릭 이벤트 방지
+
     onSelectChange(val);
     setIsOpen(false);
   };
@@ -58,11 +62,12 @@ export default function SearchBar({
         {isOpen ? <SlArrowUp size={13} /> : <SlArrowDown size={13} />}
         {isOpen && (
           <OptionList>
-            {options.map((opt) => (
+            {options.map((opt, index) => (
               <OptionItem
                 key={opt.value}
                 isSelected={opt.value === selectedValue}
-                onClick={() => handleSelect(opt.value)}
+                disabled={index === 0}
+                onClick={(e) => handleSelect(opt.value, e)}
               >
                 {opt.label}
               </OptionItem>
@@ -80,6 +85,11 @@ export default function SearchBar({
         placeholder={placeholder}
         value={searchValue}
         onChange={(e) => onSearchChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && onSearch) {
+            onSearch();
+          }
+        }}
       />
     </Wrapper>
   );
@@ -95,7 +105,6 @@ const Wrapper = styled.div`
 const SelectContainer = styled.div`
   display: flex;
   align-items: center;
-  //   width: 5.125rem;
   height: 3rem;
   padding: 0.75rem;
   border-radius: 0.75rem 0 0 0.75rem;
@@ -117,7 +126,7 @@ const OptionList = styled.ul`
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  width: 100%;
+  width: 22rem;
   background: white;
   border-radius: 8px;
   border: 1px solid ${colors.graycolor10};
@@ -127,9 +136,11 @@ const OptionList = styled.ul`
   z-index: 100;
 `;
 
-const OptionItem = styled.li<{ isSelected: boolean }>`
+const OptionItem = styled.li<{ isSelected: boolean; disabled: boolean }>`
   padding: 8px 12px;
   font-size: 14px;
+  color: ${({ disabled }) =>
+    disabled ? colors.graycolor50 : colors.graycolor100};
   background-color: ${({ isSelected }) =>
     isSelected ? colors.graycolor10 : "transparent"};
   cursor: pointer;

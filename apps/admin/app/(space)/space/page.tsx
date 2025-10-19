@@ -3,7 +3,7 @@
 import React from "react";
 import styled from "@emotion/styled";
 import IconButton from "@components/ui/button/IconButton";
-import SearchBar from "@components/ui/searchbar/admin/Searchbar";
+import SearchBar from "@components/ui/searchbar/Searchbar";
 import SpaceCard from "./components/SpaceCard";
 import SpaceFormModal from "./components/SpaceFormModal";
 import { useSpace } from "./hooks/useSpace";
