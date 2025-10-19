@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## 📋 목차
 
-## Getting Started
+- [프로젝트 소개](#-프로젝트-소개)
+- [사용 기술](#️-사용-기술)
+- [빌드 및 실행](#-빌드-및-실행)
+- [폴더 구조](#-폴더-구조)
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# 프로젝트 소개
+
+<img width="1920" height="1080" alt="프로젝트 대표 이미지" src="https://github.com/user-attachments/assets/bd6f809d-c0c4-4623-a4f2-62cc8eeaca2d" />
+
+- 신한금융희망재단의 **공간 예약 서비스 프론트엔드 코드**입니다.
+- 사용자용 페이지(`user`)와 관리자용 페이지(`admin`)로 구성되어 있습니다.
+
+---
+
+# 사용 기술
+
+| 구분            | 기술                      |
+| --------------- | ------------------------- |
+| Framework       | **Next.js**               |
+| Language        | **TypeScript**, **React** |
+| Styling         | **Emotion**               |
+| Node Version    | **v20.19.4**              |
+| Package Manager | **pnpm**                  |
+
+---
+
+# 빌드 및 실행
+
+- 루트의 `package.json`에 정의된 스크립트를 통해 빌드 및 실행할 수 있습니다.
+- 처음 실행 전에는 반드시 pnpm install을 통해 패키지를 설치하세요.
+
+```json
+"scripts": {
+  "dev:admin": "pnpm --filter admin dev",
+  "dev:user": "pnpm --filter user dev",
+  "build:admin": "pnpm --filter admin build",
+  "build:user": "pnpm --filter user build"
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 개발 서버 실행
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+pnpm dev:admin   # 관리자 페이지 실행
+pnpm dev:user    # 사용자 페이지 실행
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 빌드
 
-## Learn More
+```
+pnpm build:admin
+pnpm build:user
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 폴더 구조
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+shinhan-booking-frontend
+├── apps
+│   ├── admin # 관리자 앱
+│   │   ├── app
+│   │   ├── components
+│   │   ├── lib
+│   │   ├── public
+│   │   ├── store
+│   │   ├── svg-icons
+│   │   ├── types
+│   │   └── tsconfig.json
+│   └── user #사용자 앱
+│       ├── app
+│   │   ├── components
+│   │   ├── lib
+│   │   ├── public
+│   │   ├── store
+│   │   ├── svg-icons
+│   │   ├── types
+│   │   └── tsconfig.json
+├── packages # admin과 user 모두에서 사용
+│   ├── components
+│   └── styles
+└── tsconfig.base.json
+```
 
-## Deploy on Vercel
+### 폴더 컨벤션
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- 공통 요소 (packages)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+  - admin과 user 모두에서 사용하는 공용 컴포넌트, 스타일, 유틸리티 등을 저장합니다.
+
+- 앱 내부 공통 요소 (components, hooks)
+
+  - 각 앱(admin, user) 내부에서만 공통적으로 사용하는 요소들을 모아둡니다.
+
+- 페이지 단위 구조 (app/[page]/)
+  - 특정 페이지 전용 컴포넌트가 많아지는 경우, app 폴더 내에 페이지별 폴더를 생성하여 관리합니다.
+  - 예) app/login/components
+
+---
