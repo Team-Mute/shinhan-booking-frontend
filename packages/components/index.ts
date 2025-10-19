@@ -9,7 +9,7 @@ export { default as Input } from "./ui/input/Input";
 export { default as Textarea } from "./ui/input/Textarea";
 
 // common/searchbar
-export { default as AdminSearchbar } from "./ui/searchbar/admin/Searchbar";
+export { default as AdminSearchbar } from "./ui/searchbar/Searchbar";
 // export { default as UserSearchbar } from "./common/searchbar/user/Searchbar";
 
 // common/selectbox
