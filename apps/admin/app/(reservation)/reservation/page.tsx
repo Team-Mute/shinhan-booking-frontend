@@ -12,7 +12,7 @@ import {
   getStatusOptions,
   postApproveReservationsApi,
   postRejectReservationApi,
-} from "../../lib/api/adminReservation";
+} from "@admin/lib/api/adminReservation";
 import {
   FlagOption,
   Previsit,
@@ -21,7 +21,7 @@ import {
   ReservationResponse,
   ReservationsParams,
   StatusOption,
-} from "../../types/reservationAdmin";
+} from "@admin/types/reservationAdmin";
 // import InfoModal from "@/components/modal/InfoModal";
 import {
   BulkApproveModal,
@@ -33,8 +33,8 @@ import {
   formatDate,
   formatTimeRange,
   getStatusStyle,
-} from "../../lib/utils/reservationUtils";
-import { useAdminAuthStore } from "../../store/adminAuthStore";
+} from "@admin/lib/utils/reservationUtils";
+import { useAdminAuthStore } from "@admin/store/adminAuthStore";
 
 const ReservationManagementPage: React.FC = () => {
   // 로딩 상태
