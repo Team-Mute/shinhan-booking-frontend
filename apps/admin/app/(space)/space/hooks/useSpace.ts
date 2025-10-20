@@ -52,10 +52,20 @@ export function useSpace() {
       }
 
       try {
-        const data = await getRegionSpaceListApi({
+        const data: SpaceAllListResponse = await getRegionSpaceListApi({
           regionId: Number(selectedRegionId),
+          page: 1,
+          size: pagination.pageSize,
         });
-        setSpaceList(data);
+
+        setSpaceList(data.content);
+        setPagination({
+          currentPage: data.currentPage,
+          totalPages: data.totalPages,
+          pageSize: data.pageSize,
+          totalElements: data.totalElements,
+        });
+        console.log("useSpace getRegionSpace log:", data);
       } catch (err) {
         console.error("지역별 공간 불러오기 실패:", err);
       }
@@ -70,11 +80,22 @@ export function useSpace() {
    */
   const fetchSpaces = async (page = 1) => {
     try {
-      const data: SpaceAllListResponse = await getAllSpaceListApi({
-        page,
-        size: pagination.pageSize,
-      });
+      let data: SpaceAllListResponse;
 
+      if (selectedRegionId) {
+        // 지역이 선택된 경우 > 지역별 조회
+        data = await getRegionSpaceListApi({
+          regionId: Number(selectedRegionId),
+          page,
+          size: pagination.pageSize,
+        });
+      } else {
+        // 지역이 선택되지 않은 경우 > 전체 조회
+        data = await getAllSpaceListApi({
+          page,
+          size: pagination.pageSize,
+        });
+      }
       setSpaceList(data.content);
       setPagination({
         currentPage: data.currentPage,
@@ -131,8 +152,9 @@ export function useSpace() {
   };
 
   /** 페이지 이동 */
-  const handlePageChange = (newPage: number) => {
+  const handlePageChange = async (newPage: number) => {
     if (newPage < 1 || newPage > pagination.totalPages) return;
+
     fetchSpaces(newPage);
   };
 

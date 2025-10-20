@@ -160,7 +160,7 @@ export type SpaceAllListResponse = {
 };
 
 /** 지역별 공간 리스트 조회 요청 DTO */
-export type SpaceRegionListParams = Pick<Region, "regionId">;
+export type SpaceRegionListParams = Pick<Region, "regionId"> & Pagination;
 
 /** 지역별 공간 리스트 조회 응답 DTO */
 export type SpaceRegionListResponse = SpaceListItem[];

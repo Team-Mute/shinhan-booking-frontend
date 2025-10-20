@@ -122,7 +122,10 @@ export async function getAllSpaceListApi(
 // 지역별 공간 리스트 조회 (1차 승인자만 지역별로, 2차 승인자는 모두 나오게)
 export async function getRegionSpaceListApi(paramsData: SpaceRegionListParams) {
   const { data } = await adminAxiosClient.get(
-    `/api/spaces-admin/list/${paramsData.regionId}`
+    `/api/spaces-admin/list/${paramsData.regionId}`,
+    {
+      params: paramsData,
+    }
   );
   return data;
 }
