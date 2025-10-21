@@ -42,7 +42,7 @@ const BulkApproveModal = ({
               <ReservationItem key={res.reservationId}>
                 <ReservationHeader>
                   <StatusTag
-                    // css={getStatusStyle(res.statusId)}
+                    $statusId={res.statusId}
                     isApprovable={false}
                   >
                     {res.reservationStatusName}
@@ -236,14 +236,24 @@ const ReservationDetails = styled.div`
   color: #4b5563;
 `;
 
-const StatusTag = styled.span<{ isApprovable: boolean }>`
-  background-color: ${(props) => (props.isApprovable ? "#d1fae5" : "#e5e7eb")};
-  color: ${(props) => (props.isApprovable ? "#065f46" : "#4b5563")};
+const StatusTag = styled('span', {
+  shouldForwardProp: (prop) => prop !== '$statusId' && prop !== 'isApprovable',
+})<{
+  $statusId?: number;
+  isApprovable: boolean;
+}>`
   padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
-  white-space: nowrap; /* 태그는 줄바꿈되지 않도록 */
+  border-radius: 9999px;
+  white-space: nowrap;
+
+  /* 기본 색상 먼저 */
+  background-color: ${(p) => (p.isApprovable ? '#d1fae5' : '#e5e7eb')};
+  color: ${(p) => (p.isApprovable ? '#065f46' : '#4b5563')};
+
+  /* 마지막에 status 색상으로 덮어쓰기 */
+  ${({ $statusId }) => $statusId != null && getStatusStyle($statusId)};
 `;
 
 const ShinhanTag = styled.span`

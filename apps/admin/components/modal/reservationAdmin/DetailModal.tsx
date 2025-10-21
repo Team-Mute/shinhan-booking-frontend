@@ -73,6 +73,8 @@ const DetailModal: React.FC<DetailModalProps> = ({
       "예약 상세 정보를 불러오지 못했거나 정보를 찾을 수 없습니다.",
       onClose
     );
+
+    return null;
   }
 
   // 3. 모든 데이터가 유효한 경우, 실제 모달 내용 렌더링
@@ -92,9 +94,6 @@ const DetailModal: React.FC<DetailModalProps> = ({
     }
     return [phoneNumber];
   };
-  const [phonePart1, phonePart2, phonePart3] = formatPhoneNumber(
-    reservation.user.phone
-  );
 
   return (
     <Overlay onClick={onClose}>
@@ -110,7 +109,7 @@ const DetailModal: React.FC<DetailModalProps> = ({
           <DetailSection>
             <InfoRow>
               <InfoLabel>예약 공간</InfoLabel>
-              <InputField>{reservation.spaceName}</InputField>
+              <InputField>{reservation?.spaceName}</InputField>
             </InfoRow>
             <InfoRow>
               <InfoLabel>예약자명</InfoLabel>
@@ -123,14 +122,6 @@ const DetailModal: React.FC<DetailModalProps> = ({
             <InfoRow>
               <InfoLabel>사용 목적</InfoLabel>
               <InputField>{reservation.reservationPurpose}</InputField>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>예약자 전화번호</InfoLabel>
-              <PhoneInputGroup>
-                <PhoneInputField>{phonePart1}</PhoneInputField>
-                <PhoneInputField>{phonePart2}</PhoneInputField>
-                <PhoneInputField>{phonePart3}</PhoneInputField>
-              </PhoneInputGroup>
             </InfoRow>
             <InfoRow>
               <InfoLabel>예약자 이메일</InfoLabel>
@@ -147,7 +138,10 @@ const DetailModal: React.FC<DetailModalProps> = ({
             <>
               <ApproveButton
                 //disabled={!reservation.isApprovable}
-                onClick={() => onApproveClick(reservationId)}
+                onClick={() => {
+                  onApproveClick(reservationId);
+                  onClose(); 
+                }}
                 width="48%"
                 isActive={reservation.isApprovable}
               >
@@ -155,7 +149,10 @@ const DetailModal: React.FC<DetailModalProps> = ({
               </ApproveButton>
               <RejectButton
                 //disabled={!reservation.isRejectable}
-                onClick={() => onRejectClick(reservationId)}
+                onClick={() => { 
+                  onRejectClick(reservationId);
+                  onClose(); 
+                }}
                 width="48%"
                 isActive={reservation.isRejectable}
               >
@@ -256,17 +253,6 @@ const InputField = styled.div`
   align-items: center; /* 세로 중앙 정렬 */
   word-break: break-all; /* 긴 텍스트 줄바꿈 */
   white-space: pre-wrap; /* 사용 목적처럼 여러 줄 입력 처리 */
-`;
-
-const PhoneInputGroup = styled.div`
-  display: flex;
-  gap: 0.5rem; /* 전화번호 각 부분 사이 간격 */
-  width: 100%;
-`;
-
-const PhoneInputField = styled(InputField)`
-  flex: 1; /* 세 부분이 동일한 너비를 갖도록 */
-  text-align: center; /* 전화번호 가운데 정렬 */
 `;
 
 const ModalFooter = styled.div`

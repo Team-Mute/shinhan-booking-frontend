@@ -22,7 +22,7 @@ import {
   ReservationsParams,
   StatusOption,
 } from "@admin/types/reservationAdmin";
-// import InfoModal from "@/components/modal/InfoModal";
+import InfoModal from "@admin/components/modal/InfoModal";
 import {
   BulkApproveModal,
   RejectModal,
@@ -506,28 +506,15 @@ const ReservationManagementPage: React.FC = () => {
             </div>
             <ReservationInfo>
               <InfoRow>
-                <StatusBadge
-                // css={getStatusStyle(reservation.statusId)}
-                >
-                  {reservation.reservationStatusName}
+                <StatusBadge $statusId={reservation.statusId}>
+                    {reservation.reservationStatusName}
                 </StatusBadge>
-                <span
-                //   css={css`
-                //     font-weight: bold;
-                //     color: #333;
-                //     word-break: break-all;
-                //   `}
-                >
+                <SpaceNameCls>
                   {reservation.spaceName}
-                </span>
-                <span
-                //   css={css`
-                //     color: #6b7280;
-                //     font-size: 0.75rem;
-                //   `}
-                >
+                </SpaceNameCls>
+                <SubTextCls>
                   예약자명 : {reservation.userName}
-                </span>
+                </SubTextCls>
                 {reservation.isShinhan && <ShinhanTag>신한</ShinhanTag>}
                 {reservation.isEmergency && <EmergencyTag>긴급</EmergencyTag>}
               </InfoRow>
@@ -672,6 +659,17 @@ const ReservationManagementPage: React.FC = () => {
 };
 
 export default ReservationManagementPage;
+
+const SpaceNameCls = styled.span`
+  font-weight: bold;
+  color: #333;
+  word-break: break-all;
+`;
+
+const SubTextCls = styled.span`
+  color: #6b7280;
+  font-size: 0.75rem;
+`;
 
 const MainContainer = styled.main`
   flex: 1;
@@ -956,11 +954,20 @@ const ReservationInfo = styled.div`
   }
 `;
 
-const StatusBadge = styled.span`
+// 상태별 색상 스타일 (동적)
+const StatusStyle = styled.span<{ $statusId: number }>`
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  ${({ $statusId }) => getStatusStyle($statusId)};
+`;
+
+// 기본 뱃지 스타일 (정적)
+const StatusBadge = styled(StatusStyle)`
   padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 9999px;
 `;
 
 const InfoRow = styled.div`
