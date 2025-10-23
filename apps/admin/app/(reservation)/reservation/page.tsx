@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { css } from "@emotion/react";
+
 import styled from "@emotion/styled";
 import { IoCheckmarkSharp } from "react-icons/io5"; // 체크마크 아이콘 추가
 import {
@@ -22,19 +23,16 @@ import {
   ReservationsParams,
   StatusOption,
 } from "@admin/types/reservationAdmin";
-import InfoModal from "@admin/components/modal/InfoModal";
-import {
-  BulkApproveModal,
-  RejectModal,
-  DetailModal,
-  ConfirmModal,
-} from "@admin/components/modal/reservationAdmin";
+
 import {
   formatDate,
   formatTimeRange,
   getStatusStyle,
 } from "@admin/lib/utils/reservationUtils";
 import { useAdminAuthStore } from "@admin/store/adminAuthStore";
+import Loader from "@admin/components/Loader";
+import { BulkApproveModal, ConfirmModal, DetailModal, RejectModal } from "./components/ReservationFormModal/components";
+import InfoModal from "../../../components/modal/InfoModal";
 
 const ReservationManagementPage: React.FC = () => {
   // 로딩 상태
@@ -354,6 +352,7 @@ const ReservationManagementPage: React.FC = () => {
   const { adminRoleId } = useAdminAuthStore();
   return (
     <MainContainer>
+      <Loader>
       <Header>
         <PageTitle>예약 관리</PageTitle>
       </Header>
@@ -454,13 +453,7 @@ const ReservationManagementPage: React.FC = () => {
           <CustomCheckbox isChecked={isAllApprovableSelected}>
             {isAllApprovableSelected && <IoCheckmarkSharp size={16} />}
           </CustomCheckbox>
-          <span
-          // css={css`
-          //   color: #4b5563;
-          // `}
-          >
-            전체 선택
-          </span>
+          <SelectAllText>전체 선택</SelectAllText>
         </SelectAllContainer>
         <ApproveAllButton onClick={handleApproveSelected}>
           선택 승인
@@ -471,15 +464,7 @@ const ReservationManagementPage: React.FC = () => {
       <ReservationList>
         {reservations.map((reservation) => (
           <ReservationItem key={reservation.reservationId}>
-            <div
-            //   css={css`
-            //     flex-shrink: 0;
-            //     margin-top: 0.25rem;
-            //     @media (min-width: 768px) {
-            //       margin-top: 0;
-            //     }
-            //   `}
-            >
+            <ThumbContainer>
               <SelectAllContainer
                 htmlFor={`checkbox-${reservation.reservationId}`}
               >
@@ -503,12 +488,10 @@ const ReservationManagementPage: React.FC = () => {
                   )}
                 </CustomCheckbox>
               </SelectAllContainer>
-            </div>
+            </ThumbContainer>
             <ReservationInfo>
               <InfoRow>
-                <StatusBadge $statusId={reservation.statusId}>
-                    {reservation.reservationStatusName}
-                </StatusBadge>
+                <StatusBadge $statusId={reservation.statusId}>{reservation.reservationStatusName}</StatusBadge>
                 <SpaceNameCls>
                   {reservation.spaceName}
                 </SpaceNameCls>
@@ -608,12 +591,12 @@ const ReservationManagementPage: React.FC = () => {
         </PaginationList>
       </PaginationNav>
       {/* InfoModal(알림) 컴포넌트*/}
-      {/* <InfoModal
+      <InfoModal
         isOpen={isInfoModalOpen}
         onClose={handleInfoModalClose} // '확인' 버튼 클릭 시 모달 닫기
         title={infoModalTitle}
         subtitle={infoModalSubtitle}
-      /> */}
+      /> 
       {/* 단건 승인 확인용 ConfirmModal */}
       <ConfirmModal
         isOpen={isConfirmApproveModalOpen}
@@ -654,12 +637,14 @@ const ReservationManagementPage: React.FC = () => {
         onRejectClick={handleReject}
         reservationId={selectedReservationForDetail}
       />
+      </Loader>
     </MainContainer>
   );
 };
 
 export default ReservationManagementPage;
 
+// --- styled ---
 const SpaceNameCls = styled.span`
   font-weight: bold;
   color: #333;
@@ -1220,4 +1205,19 @@ const EmergencyTag = styled.span`
   font-size: 0.75rem; /* 피그마에 명시되지 않았지만, 다른 태그와 유사하게 적용 */
   font-weight: 700;
   color: #ff0000;
+`;
+
+// "전체 선택" 텍스트 색상
+const SelectAllText = styled.span`
+  color: #4b5563;
+`;
+
+// 예약 리스트 아이템 내부 썸네일/왼쪽 영역 등(주석에 있던 div)
+const ThumbContainer = styled.div`
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+
+  @media (min-width: 768px) {
+    margin-top: 0;
+  }
 `;

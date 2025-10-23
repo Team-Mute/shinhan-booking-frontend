@@ -19,6 +19,7 @@ export const formatTimeRange = (fromStr: string, toStr: string): string => {
     return `${fromHours}:${fromMinutes}~${toHours}:${toMinutes}`;
 };
 
+// 예약 상태별 색상
 export const getStatusStyle = (statusId: number) => {
     switch (statusId) {
         case 1: // 1차 승인 대기
