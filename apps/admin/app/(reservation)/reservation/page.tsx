@@ -31,8 +31,9 @@ import {
 } from "@admin/lib/utils/reservationUtils";
 import { useAdminAuthStore } from "@admin/store/adminAuthStore";
 import Loader from "@admin/components/Loader";
-import { BulkApproveModal, ConfirmModal, DetailModal, RejectModal } from "./components/ReservationFormModal/components";
 import InfoModal from "../../../components/modal/InfoModal";
+import { BulkApproveModal, ConfirmModal, DetailModal, RejectModal } from "./components";
+import { useModalStore } from "@admin/store/modalStore";
 
 const ReservationManagementPage: React.FC = () => {
   // 로딩 상태
@@ -49,9 +50,6 @@ const ReservationManagementPage: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
   // 모달
-  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
-  const [infoModalTitle, setInfoModalTitle] = useState("");
-  const [infoModalSubtitle, setInfoModalSubtitle] = useState("");
   const [isBulkConfirmModalOpen, setIsBulkConfirmModalOpen] = useState(false); // 일괄 승인 모달
   const [reservationsToApprove, setReservationsToApprove] = useState<
     Reservation[]
@@ -86,6 +84,16 @@ const ReservationManagementPage: React.FC = () => {
   const [keyword, setKeyword] = useState("");
   const [isShinhan, setIsShinhan] = useState(false);
   const [isEmergency, setIsEmergency] = useState(false);
+
+  // InfoModal을 띄우기 위해 useModalStore에서 open 액션을 가져옵니다.
+  const openInfoModal = useModalStore(state => state.open);
+
+  // 💡 InfoModal을 띄우는 함수를 전역 상태 기반으로 변경
+  const showAlertModal = (title: string, subtitle: string, onClose?: () => void) => {
+      // InfoModal의 전역 상태 'open' 액션을 호출
+      // 인수를 객체가 아닌 순서대로 전달합니다.
+      openInfoModal(title, subtitle, onClose);
+  };
 
   // 필터 옵션 데이터를 가져오는 useEffect
   useEffect(() => {
@@ -271,13 +279,6 @@ const ReservationManagementPage: React.FC = () => {
     }
   };
 
-  // 2. InfoModal을 띄우는 함수 생성
-  const showAlertModal = (title: string, subtitle: string) => {
-    setInfoModalTitle(title);
-    setInfoModalSubtitle(subtitle);
-    setIsInfoModalOpen(true);
-  };
-
   const handleSingleSelect = (reservationId: number, isApprovable: boolean) => {
     // 승인 가능한 항목만 선택/해제 로직을 실행
     if (!isApprovable) {
@@ -336,12 +337,6 @@ const ReservationManagementPage: React.FC = () => {
 
   // DetailModal을 닫는 함수
   const handleDetailModalClose = () => {
-    setIsDetailModalOpen(false);
-  };
-
-  // InfoModal을 닫는 함수
-  const handleInfoModalClose = () => {
-    setIsInfoModalOpen(false);
     setIsDetailModalOpen(false);
   };
 
@@ -591,12 +586,7 @@ const ReservationManagementPage: React.FC = () => {
         </PaginationList>
       </PaginationNav>
       {/* InfoModal(알림) 컴포넌트*/}
-      <InfoModal
-        isOpen={isInfoModalOpen}
-        onClose={handleInfoModalClose} // '확인' 버튼 클릭 시 모달 닫기
-        title={infoModalTitle}
-        subtitle={infoModalSubtitle}
-      /> 
+      <InfoModal/> 
       {/* 단건 승인 확인용 ConfirmModal */}
       <ConfirmModal
         isOpen={isConfirmApproveModalOpen}
