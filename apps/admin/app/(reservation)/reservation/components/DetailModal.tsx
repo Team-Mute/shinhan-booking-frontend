@@ -27,7 +27,7 @@ const DetailModal: React.FC<DetailModalProps> = ({
   const [reservation, setReservation] = useState<ReservationDetail | null>(
     null
   );
-  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
   const { open } = useModalStore();
 
   useEffect(() => {
@@ -36,17 +36,15 @@ const DetailModal: React.FC<DetailModalProps> = ({
         setReservation(null);
         return;
       }
-
-      setIsLoading(true);
       try {
         const data = await getReservationDetailApi(reservationId);
         setReservation(data);
+        setIsError(false);
       } catch (err) {
         // 에러 발생 시 reservation을 null로 유지
         console.error("Failed to fetch reservation details", err);
         setReservation(null);
-      } finally {
-        setIsLoading(false);
+        setIsError(true);
       }
     };
 
@@ -55,32 +53,24 @@ const DetailModal: React.FC<DetailModalProps> = ({
     }
   }, [isOpen, reservationId]);
 
+  useEffect(() => {
+    if (isOpen && isError) {
+      open(
+        "오류 발생",
+        "예약 상세 정보를 불러오지 못했거나 정보를 찾을 수 없습니다.",
+        onClose
+      );
+    }
+    }, [isOpen, isError, open, onClose]); // isError 상태에 반응
+
   // -------------------- 렌더링 로직 시작 --------------------
   if (!isOpen) return null;
 
-  // 1. 로딩 중인 경우
-  if (isLoading) {
-    return (
-      <Overlay>
-        <ModalContainer>
-          <div>로딩 중...</div>
-        </ModalContainer>
-      </Overlay>
-    );
-  }
-
-  // 2. API 호출 실패 또는 데이터가 없는 경우
-  if (!reservation) {
-    open(
-      "오류 발생",
-      "예약 상세 정보를 불러오지 못했거나 정보를 찾을 수 없습니다.",
-      onClose
-    );
-
+  // API 호출 실패 또는 데이터가 없는 경우
+ if (isError || !reservation) { 
     return null;
   }
-
-  // 3. 모든 데이터가 유효한 경우, 실제 모달 내용 렌더링
+  // 모든 데이터가 유효한 경우, 실제 모달 내용 렌더링
   const isPending =
     reservation.reservationStatusName === "1차 승인 대기" ||
     reservation.reservationStatusName === "2차 승인 대기";
