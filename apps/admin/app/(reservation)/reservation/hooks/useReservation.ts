@@ -1,4 +1,3 @@
-// src/hooks/useReservation.ts 또는 @admin/hooks/useReservation.ts
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   getFlagOptions,
@@ -8,15 +7,11 @@ import {
   postApproveReservationsApi,
   postRejectReservationApi,
 } from "@admin/lib/api/adminReservation";
-import {
-  FlagOption,
-  RegionOption,
-  Reservation,
-  StatusOption,
-} from "@admin/types/reservationAdmin";
+
 import { useAdminAuthStore } from "@admin/store/adminAuthStore";
 import { useModalStore } from "@admin/store/modalStore";
 import { useConfirmModalStore } from "@admin/store/confirmModalStore";
+import { FlagOptionDTO, RegionOptionDTO, ReservationListItemDTO, StatusOptionDTO } from "@admin/types/dto/reservation.dto";
 
 /** 
  * 전역 상태/모달 유틸리티 
@@ -44,7 +39,7 @@ export const useReservation = () => {
   const { adminRoleId } = useAdminAuthStore();
 
   // API 데이터 및 로딩 관련 상태
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservations, setReservations] = useState<ReservationListItemDTO[]>([]);
 
   // 페이지네이션 관련 상태
   const [uiCurrentPage, setUiCurrentPage] = useState(1);
@@ -54,9 +49,9 @@ export const useReservation = () => {
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
   // 필터링 옵션 상태
-  const [statuses, setStatuses] = useState<StatusOption[]>([]);
-  const [regions, setRegions] = useState<RegionOption[]>([]);
-  const [flags, setFlags] = useState<FlagOption[]>([]);
+  const [statuses, setStatuses] = useState<StatusOptionDTO[]>([]);
+  const [regions, setRegions] = useState<RegionOptionDTO[]>([]);
+  const [flags, setFlags] = useState<FlagOptionDTO[]>([]);
 
   // 드롭다운 선택 상태 (필터링 조건)
   const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
@@ -69,7 +64,7 @@ export const useReservation = () => {
 
   // --- 모달 상태 관리 ---
   const [isBulkConfirmModalOpen, setIsBulkConfirmModalOpen] = useState(false);
-  const [reservationsToApprove, setReservationsToApprove] = useState<Reservation[]>([]);
+  const [reservationsToApprove, setReservationsToApprove] = useState<ReservationListItemDTO[]>([]);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [selectedReservationIdToReject, setSelectedReservationIdToReject] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");

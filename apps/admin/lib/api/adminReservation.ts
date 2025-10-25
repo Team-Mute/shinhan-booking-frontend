@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import adminAxiosClient from "./adminAxiosClient";
-import { ApproveResponse, FlagOption, Previsit, RegionOption, Reservation, ReservationDetail, ReservationResponse, ReservationsParams, StatusOption } from "@admin/types/reservationAdmin";
+import { ApproveResponse, FlagOption, Previsit, RegionOption, Reservation, ReservationDetail, ReservationResponse, ReservationsParams, StatusOption } from "@admin/types/dto/reservation.dto";
 
 /**
  * 예약 관리 리스트 호출 API

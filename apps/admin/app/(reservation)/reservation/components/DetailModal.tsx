@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import { IoCloseOutline } from "react-icons/io5";
 import Button from "@components/ui/button/Button";
-import { ReservationDetail } from "@admin/types/reservationAdmin";
+import { ReservationDetail } from "@admin/types/dto/reservation.dto";
 import { getReservationDetailApi } from "@admin/lib/api/adminReservation";
 import { useModalStore } from "@admin/store/modalStore";
 

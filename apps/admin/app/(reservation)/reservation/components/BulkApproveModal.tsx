@@ -6,7 +6,7 @@ import {
   formatTimeRange,
   getStatusStyle,
 } from "@admin/lib/utils/reservationUtils";
-import { Reservation } from "@admin/types/reservationAdmin";
+import { Reservation } from "@admin/types/dto/reservation.dto";
 
 /** 
  * 선택 승인 모달 창
