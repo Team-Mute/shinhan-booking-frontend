@@ -1,345 +1,86 @@
 "use client";
-/** @jsxImportSource @emotion/react */
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { css } from "@emotion/react";
 
 import styled from "@emotion/styled";
 import { IoCheckmarkSharp } from "react-icons/io5"; // 체크마크 아이콘 추가
 import {
-  getFlagOptions,
-  getRegionOptions,
-  getReservationApi,
-  getStatusOptions,
-  postApproveReservationsApi,
-  postRejectReservationApi,
-} from "@admin/lib/api/adminReservation";
-import {
-  FlagOption,
-  RegionOption,
-  Reservation,
-  StatusOption,
-} from "@admin/types/reservationAdmin";
-
-import {
   formatDate,
   formatTimeRange,
   getStatusStyle,
 } from "@admin/lib/utils/reservationUtils";
-import { useAdminAuthStore } from "@admin/store/adminAuthStore";
 import Loader from "@admin/components/Loader";
 import InfoModal from "../../../components/modal/InfoModal";
 import { BulkApproveModal, ConfirmModal, DetailModal, RejectModal } from "./components";
-import { useModalStore } from "@admin/store/modalStore";
-import { useConfirmModalStore } from "@admin/store/confirmModalStore";
+import { useReservation } from "./hooks/useReservation";
 
+/**
+ * ReservationManagementPage 컴포넌트
+ * ----------------------------
+ * 예약 관리 페이지
+ *
+ * @description
+ * - 예약 목록 조회, 필터링 (상태, 지점) 및 페이지네이션
+ * - 예약자명/공간명 키워드 검색
+ * - 예약 승인 (단건/일괄) 및 반려 처리
+ * - 상세 보기, 일괄 승인, 반려 모달 제어
+ * - 모든 상태 및 비즈니스 로직은 useReservation 훅에서 관리.
+ */
 const ReservationManagementPage: React.FC = () => {
-  // API 데이터 및 로딩 관련 상태
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-
-  // 페이지네이션 관련 상태
-  const [uiCurrentPage, setUiCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  // 체크박스 선택 관련 상태
-  const [selectedItems, setSelectedItems] = useState<number[]>([]);
-
-  // 모달
-  const [isBulkConfirmModalOpen, setIsBulkConfirmModalOpen] = useState(false); // 일괄 승인 모달
-  const [reservationsToApprove, setReservationsToApprove] = useState<
-    Reservation[]
-  >([]); // 일괄 승인 모달에 표시할 예약 객체
-
-  // 반려
-  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const [selectedReservationIdToReject, setSelectedReservationIdToReject] =
-    useState<number | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
-
-  // 상세 보기 모달 관련 상태
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedReservationForDetail, setSelectedReservationForDetail] =
-    useState<number | null>(null);
-
-  // 필터링 옵션 상태
-  const [statuses, setStatuses] = useState<StatusOption[]>([]);
-  const [regions, setRegions] = useState<RegionOption[]>([]);
-  const [flags, setFlags] = useState<FlagOption[]>([]);
-
-  // 드롭다운 선택 상태
-  const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
-  const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
-
-  // 필터링 API 호출 시 상태
-  const [keyword, setKeyword] = useState("");
-  const [isShinhan, setIsShinhan] = useState(false);
-  const [isEmergency, setIsEmergency] = useState(false);
-
-  // InfoModal을 띄우기 위해 useModalStore에서 open 액션 호출
-  const openInfoModal = useModalStore(state => state.open);
-
-  // InfoModal을 띄우기 위해 useModalStore에서 open 액션 호출
-  const openConfirmModal = useConfirmModalStore(state => state.open);
-
-  // InfoModal을 띄우는 함수를 전역 상태 기반으로 변경
-  const showAlertModal = (title: string, subtitle: string, onClose?: () => void) => {
-      // InfoModal의 전역 상태 'open' 액션을 호출
-      // 인수를 객체가 아닌 순서대로 전달합니다.
-      openInfoModal(title, subtitle, onClose);
-  };
-
-  // 필터 옵션 데이터를 가져오는 useEffect
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        // 분리한 API 함수들을 호출
-        const statusData = await getStatusOptions();
-        const regionData = await getRegionOptions();
-        const flagData = await getFlagOptions();
-
-        setStatuses(statusData);
-        setRegions(regionData);
-        setFlags(flagData);
-      } catch (error) {
-        console.error("필터 옵션 로딩 실패:", error);
-        // 사용자에게 오류 알림 로직 추가
-      }
-    };
-    fetchOptions();
-  }, []);
-
-  //API 호출 로직을 분리한 함수로 대체
-  const loadReservations = async () => {
-    try {
-      const response = await getReservationApi({
-        page: uiCurrentPage,
-        size: 5,
-        keyword: keyword,
-        regionId: selectedRegionId,
-        statusId: selectedStatusId,
-        isShinhan: isShinhan,
-        isEmergency: isEmergency,
-      });
-
-      setReservations(response.content);
-      setTotalPages(response.totalPages);
-    } catch (err) {
-      console.error("예약 목록을 불러오는 데 실패했습니다:", err);
-    }
-  };
-
-  // 의존성 배열에 모든 필터 상태 추가
-  useEffect(() => {
-    loadReservations();
-  }, [
-    uiCurrentPage,
+  const {
+    // 상태 및 데이터
+    reservations,
+    statuses,
+    regions,
+    flags,
     keyword,
-    selectedStatusId,
-    selectedRegionId,
     isShinhan,
     isEmergency,
-  ]);
+    adminRoleId,
 
-  // 페이지 변경 핸들러는 uiCurrentPage 상태만 변경합니다.
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setUiCurrentPage(page);
-      loadReservations();
-    }
-  };
+    // 페이지네이션
+    uiCurrentPage,
+    totalPages,
 
-  const handleApprove = (reservationId: number) => {
-    openConfirmModal(
-      "예약을 승인하시겠습니까?", // title
-      "해당 예약을 승인하면 반려하지 못합니다.", // subtitle
-      // onConfirm 콜백: ID를 인수로 전달하여 confirmSingleApprove 호출
-      () => confirmSingleApprove(reservationId), 
-      () => {} 
-    );
-  };
+    // 체크박스
+    selectedItems,
+    isAllApprovableSelected,
 
-  // 선택 승인 버튼 핸들러
-  const handleApproveSelected = () => {
-    if (selectedItems.length === 0) {
-      showAlertModal("알림", "승인할 예약을 선택해주세요.");
-      return;
-    }
+    // 모달 상태 및 데이터
+    isBulkConfirmModalOpen,
+    reservationsToApprove,
+    isRejectModalOpen,
+    rejectionReason,
+    isDetailModalOpen,
+    selectedReservationForDetail,
 
-    // 선택된 항목이 하나일 경우 (단건 승인)
-    if (selectedItems.length === 1) {
-      const singleReservationId = selectedItems[0];
-      // handleApprove 함수 재사용 (Store 기반 호출)
-      handleApprove(singleReservationId);
-    }
-    // 여러 건 선택인 경우 (일괄 승인)
-    else {
-      const selectedReservationObjects = reservations.filter((res) =>
-        selectedItems.includes(res.reservationId)
-      );
-      setReservationsToApprove(selectedReservationObjects);
-      setIsBulkConfirmModalOpen(true);
-    }
-  };
+    // 핸들러 함수
+    handlePageChange,
+    handleFilterChange,
+    handleKeywordChange,
+    handleKeywordSearch,
+    handleFlagToggle,
 
-  // 단건 승인 최종 확인 함수 (ConfirmModal에서 호출)
-  const confirmSingleApprove = async (targetId: number) => {
-  try {
-    // API 호출 (단건 승인이므로 ID 하나를 배열에 담아 전달)
-    const response = await postApproveReservationsApi([targetId]);
+    // 액션 핸들러
+    handleApprove,
+    handleApproveSelected,
+    confirmBulkApprove,
+    handleReject,
+    handleRejectionReasonChange,
+    confirmReject,
 
-    // 단건 승인 응답의 results 배열 첫 번째 요소를 사용
-    const result = response.results[0];
+    // 체크박스 핸들러
+    handleSingleSelect,
+    handleSelectAll,
 
-    if (result.success) {
-      const successTitle = response.results[0]?.message;
-      const successMessage =
-        successTitle == "1차 승인 완료"
-          ? "최종 승인 완료를 위해 2차 승인이 필요해요."
-          : "최종적으로 예약이 승인되었어요. \n 예약자에게 예약 확정 메세지가 전송됩니다.";
-
-      showAlertModal(successTitle, successMessage);
-    } else {
-      // API 응답에 따른 승인 실패 메시지
-      showAlertModal("승인 실패", result.message);
-    }
-
-    // 예약 목록 다시 불러오기 및 선택된 항목 초기화
-    await loadReservations();
-    setSelectedItems([]);
-  } catch (err) {
-    // 통신 오류 처리
-    showAlertModal(
-      "오류 발생",
-      "서버와의 통신에 실패했습니다. 잠시 후 다시 시도해주세요."
-    );
-    console.error("단건 승인 실패:", err);
-  }
-  }
-
-  // 일괄 승인 최종 확인 함수 (BulkApproveModal에서 호출)
-  const confirmBulkApprove = async () => {
-    setIsBulkConfirmModalOpen(false);
-
-    // 선택된 예약 ID 배열 생성
-    const selectedReservationIds = reservationsToApprove.map(
-      (res) => res.reservationId
-    );
-
-    try {
-      const response = await postApproveReservationsApi(selectedReservationIds);
-
-      const { total, successCount, failureCount } = response;
-
-      if (successCount === total) {
-        // 모든 건이 성공했을 경우
-        const successTitle = response.results[0]?.message;
-        const successMessage =
-          successTitle == "1차 승인 완료"
-            ? "최종 승인 완료를 위해 2차 승인이 필요해요."
-            : "최종적으로 예약이 승인되었어요. \n 예약자에게 예약 확정 메세지가 전송됩니다.";
-
-        showAlertModal(successTitle, successMessage);
-      } else if (failureCount > 0) {
-        // 일부 또는 전체가 실패했을 경우
-        showAlertModal(
-          "일부 승인 실패",
-          `총 ${total}건 중 ${successCount}건만 승인되었습니다.\n자세한 내용은 개별 상태를 확인해주세요.`
-        );
-      }
-
-      await loadReservations();
-      setSelectedItems([]);
-      setReservationsToApprove([]);
-    } catch (err) {
-      showAlertModal(
-        "오류 발생",
-        "서버와의 통신에 실패했습니다. 잠시 후 다시 시도해주세요."
-      );
-      console.error("일괄 승인 실패:", err);
-    }
-  };
-
-  const handleSingleSelect = (reservationId: number, isApprovable: boolean) => {
-    // 승인 가능한 항목만 선택/해제 로직을 실행
-    if (!isApprovable) {
-      return; // 승인 불가능하면 아무것도 하지 않고 함수 종료
-    }
-
-    setSelectedItems((prevSelected) =>
-      prevSelected.includes(reservationId)
-        ? prevSelected.filter((id) => id !== reservationId)
-        : [...prevSelected, reservationId]
-    );
-  };
-
-  // 반려하기 버튼을 눌렀을 때 호출되는 함수
-  const handleReject = (reservationId: number) => {
-    setSelectedReservationIdToReject(reservationId);
-    setIsRejectModalOpen(true); // 반려 모달 열기
-  };
-
-  // 모달에서 '반려하기' 버튼을 눌러 최종 확정하는 함수
-  const confirmReject = async () => {
-    if (selectedReservationIdToReject === null || !rejectionReason.trim()) {
-      //showAlertModal('알림', '반려 사유를 입력해주세요.');
-      return;
-    }
-
-    try {
-      await postRejectReservationApi(
-        selectedReservationIdToReject,
-        rejectionReason
-      );
-      showAlertModal(
-        "반려 완료",
-        "해당 예약이 반려되었습니다.\n사용자에게 반려 메시지가 전송됩니다."
-      );
-
-      // 상태 초기화 및 데이터 다시 로드
-      setIsRejectModalOpen(false);
-      setRejectionReason("");
-      await loadReservations();
-    } catch (err) {
-      console.error("반려 실패", err);
-      setIsRejectModalOpen(false);
-      showAlertModal(
-        "반려 실패",
-        "예약 반려에 실패했습니다. 다시 시도해주세요."
-      );
-    }
-  };
-
-  // 상세 보기 버튼 클릭 핸들러
-  const handleDetailClick = (reservationId: number) => {
-    setSelectedReservationForDetail(reservationId);
-    setIsDetailModalOpen(true);
-  };
-
-  // DetailModal을 닫는 함수
-  const handleDetailModalClose = () => {
-    setIsDetailModalOpen(false);
-  };
-
-  const approvableReservations = reservations.filter((res) => res.isApprovable);
-  const isAllApprovableSelected =
-    approvableReservations.length > 0 &&
-    selectedItems.length === approvableReservations.length;
-  const { adminRoleId } = useAdminAuthStore();
-
-    // UI 핸들러 함수들
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      // 승인 가능한 모든 예약의 ID만 가져옴
-      const allApprovableIds = approvableReservations.map(
-        (res) => res.reservationId
-      );
-      setSelectedItems(allApprovableIds);
-    } else {
-      setSelectedItems([]);
-    }
-  };
-
-  return (
+    // 모달 닫기
+    handleRejectModalClose,
+    handleDetailClick,
+    handleDetailModalClose,
+    handleBulkConfirmModalClose
+  } = useReservation();
+return (
     <MainContainer>
       <Loader>
       <Header>
@@ -352,12 +93,8 @@ const ReservationManagementPage: React.FC = () => {
         {/* 예약 상태 드롭다운 */}
         <DropdownContainer>
           <StyledSelect
-            onChange={(e) => {
-              const value =
-                e.target.value === "" ? null : Number(e.target.value);
-              setSelectedStatusId(value);
-              setUiCurrentPage(1);
-            }}
+            // 훅의 핸들러 사용
+            onChange={(e) => handleFilterChange("status", e.target.value)}
           >
             <option value="">예약 상태 전체</option>
             {statuses.map((status) => (
@@ -372,12 +109,8 @@ const ReservationManagementPage: React.FC = () => {
         {adminRoleId === 0 || adminRoleId === 1 ? (
           <DropdownContainer>
             <StyledSelect
-              onChange={(e) => {
-                const value =
-                  e.target.value === "" ? null : Number(e.target.value);
-                setSelectedRegionId(value);
-                setUiCurrentPage(1);
-              }}
+              // 훅의 핸들러 사용
+              onChange={(e) => handleFilterChange("region", e.target.value)}
             >
               <option value="">지점</option>
               {regions.map((region) => (
@@ -395,12 +128,11 @@ const ReservationManagementPage: React.FC = () => {
             // 입력창의 현재 값을 keyword 상태와 연결
             value={keyword}
             // 입력값이 변경될 때마다 keyword 상태 업데이트
-            onChange={(e) => setKeyword(e.target.value)}
+            onChange={(e) => handleKeywordChange(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                // 엔터 키를 누르면 페이지를 1로 초기화하고
-                setUiCurrentPage(1);
-                // useEffect가 keyword 상태 변경을 감지하여 loadReservations를 호출
+                // 엔터 키를 누르면 훅의 검색 실행 함수 호출
+                handleKeywordSearch();
               }
             }}
           />
@@ -411,16 +143,8 @@ const ReservationManagementPage: React.FC = () => {
             // 신한 예약 보기 / 긴급 예약 보기 Flag
             <FilterButton
               key={flag.key}
-              onClick={() => {
-                if (flag.key === "isShinhan") {
-                  setIsShinhan((prev) => !prev);
-                  setIsEmergency(false);
-                } else if (flag.key === "isEmergency") {
-                  setIsEmergency((prev) => !prev);
-                  setIsShinhan(false);
-                }
-                setUiCurrentPage(1);
-              }}
+              // 훅의 핸들러 사용
+              onClick={() => handleFlagToggle(flag.key as 'isShinhan' | 'isEmergency')}
               isActive={flag.key === "isShinhan" ? isShinhan : isEmergency}
             >
               {flag.label}
@@ -435,8 +159,9 @@ const ReservationManagementPage: React.FC = () => {
           <HiddenCheckbox
             type="checkbox"
             id="selectAllCheckbox"
-            // isAllApprovableSelected 상태를 사용
+            // 훅에서 계산된 상태 사용
             checked={isAllApprovableSelected}
+            // 훅의 핸들러 사용 (event 인수는 필요 없도록 훅에서 처리)
             onChange={handleSelectAll}
           />
           <CustomCheckbox isChecked={isAllApprovableSelected}>
@@ -461,12 +186,13 @@ const ReservationManagementPage: React.FC = () => {
                   type="checkbox"
                   id={`checkbox-${reservation.reservationId}`}
                   checked={selectedItems.includes(reservation.reservationId)}
+                  // 훅의 핸들러 사용
                   onChange={() =>
                     handleSingleSelect(
                       reservation.reservationId,
                       reservation.isApprovable
                     )
-                  } // 함수에 isApprovable 전달
+                  }
                   disabled={!reservation.isApprovable}
                 />
                 <CustomCheckbox
@@ -537,14 +263,14 @@ const ReservationManagementPage: React.FC = () => {
               {/* 승인하기 버튼 - isApprovable 값에 따라 비활성화 */}
               <ApproveActionButton
                 disabled={!reservation.isApprovable}
-                onClick={() => handleApprove(reservation.reservationId)} // 수정된 handleApprove 호출
+                onClick={() => handleApprove(reservation.reservationId)} // 훅의 핸들러 호출
               >
                 승인하기
               </ApproveActionButton>
               {/* 반려하기 버튼 - isRejectable 값에 따라 비활성화 */}
               <RejectActionButton
                 disabled={!reservation.isRejectable}
-                onClick={() => handleReject(reservation.reservationId)}
+                onClick={() => handleReject(reservation.reservationId)} // 훅의 핸들러 호출
               >
                 반려하기
               </RejectActionButton>
@@ -579,38 +305,33 @@ const ReservationManagementPage: React.FC = () => {
           </PaginationItem>
         </PaginationList>
       </PaginationNav>
-      {/* InfoModal(알림) 컴포넌트*/}
-      <InfoModal/> 
+
+      {/* InfoModal(알림) 컴포넌트 */}
+      <InfoModal/>
       {/* 단건 승인 확인용 ConfirmModal */}
       <ConfirmModal/>
       {/* 일괄승인 모달 */}
       <BulkApproveModal
-        isOpen={isBulkConfirmModalOpen}
-        reservations={reservationsToApprove} // 선택된 예약 객체 배열 전달
-        onConfirm={confirmBulkApprove}
-        onCancel={() => {
-          setIsBulkConfirmModalOpen(false);
-          setReservationsToApprove([]); // 모달 닫을 때 상태 초기화
-        }}
+        isOpen={isBulkConfirmModalOpen} // 훅의 상태 사용
+        reservations={reservationsToApprove} // 훅의 상태 사용
+        onConfirm={confirmBulkApprove} // 훅의 핸들러 사용
+        onCancel={handleBulkConfirmModalClose}
       />
       {/* 반려하기 모달 */}
       <RejectModal
         isOpen={isRejectModalOpen}
-        onClose={() => {
-          setIsRejectModalOpen(false);
-          setRejectionReason(""); // 모달 닫을 때 사유 초기화
-        }}
-        onConfirm={confirmReject}
-        rejectionReason={rejectionReason}
-        setRejectionReason={setRejectionReason}
+        onClose={handleRejectModalClose} // 훅의 닫기 핸들러 사용
+        onConfirm={confirmReject} // 훅의 최종 확정 핸들러 사용
+        rejectionReason={rejectionReason} // 훅의 상태 사용
+        setRejectionReason={handleRejectionReasonChange} // 훅의 핸들러 사용
       />
-      {/* 상세 보기 모달 추가 */}
+      {/* 상세 보기 모달 */}
       <DetailModal
-        isOpen={isDetailModalOpen}
-        onClose={handleDetailModalClose}
+        isOpen={isDetailModalOpen} // 훅의 상태 사용
+        onClose={handleDetailModalClose} // 훅의 닫기 핸들러 사용
         onApproveClick={handleApprove}
         onRejectClick={handleReject}
-        reservationId={selectedReservationForDetail}
+        reservationId={selectedReservationForDetail} // 훅의 상태 사용
       />
       </Loader>
     </MainContainer>

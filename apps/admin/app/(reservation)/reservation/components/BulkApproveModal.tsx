@@ -8,7 +8,9 @@ import {
 } from "@admin/lib/utils/reservationUtils";
 import { Reservation } from "@admin/types/reservationAdmin";
 
-// 모달 컴포넌트 props의 타입을 `Reservation`에 맞게 수정
+/** 
+ * 선택 승인 모달 창
+ */
 interface BulkApproveModalProps {
   isOpen: boolean;
   reservations: Reservation[];
@@ -29,7 +31,7 @@ const BulkApproveModal = ({
       <ModalContainer>
         <ModalHeader>
           <ModalTitle>
-            {reservations.length > 1 ? "선택 승인" : "예약 승인"}
+            선택 승인
           </ModalTitle>
           <CloseButton onClick={onCancel}>
             <IoCloseOutline size={24} color="#6b7280" />
@@ -99,7 +101,7 @@ const BulkApproveModal = ({
 
         <ButtonWrapper>
           <Button onClick={onConfirm} isActive={true} width={"98%"}>
-            {reservations.length > 1 ? "전체 승인하기" : "승인하기"}
+           전체 승인하기
           </Button>
         </ButtonWrapper>
       </ModalContainer>

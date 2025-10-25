@@ -6,6 +6,9 @@ import { ReservationDetail } from "@admin/types/reservationAdmin";
 import { getReservationDetailApi } from "@admin/lib/api/adminReservation";
 import { useModalStore } from "@admin/store/modalStore";
 
+/** 
+ * 상세 보기 모달 창
+ */
 interface DetailModalProps {
   isOpen: boolean;
   onClose: () => void;
