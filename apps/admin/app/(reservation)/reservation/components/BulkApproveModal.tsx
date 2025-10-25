@@ -37,11 +37,11 @@ const BulkApproveModal = ({
         </ModalHeader>
 
         <ReservationListContainer>
-          {reservations.length > 0 ? (
+          {reservations.length > 0 ? ( 
             reservations.map((res) => (
-              <ReservationItem key={res.reservationId}>
+              <ReservationItem> 
                 <ReservationHeader>
-                  <StatusTag
+                  <StatusTag 
                     $statusId={res.statusId}
                     isApprovable={false}
                   >
@@ -49,59 +49,46 @@ const BulkApproveModal = ({
                   </StatusTag>
                   {res.isShinhan && <ShinhanTag>신한</ShinhanTag>}
                   {res.isEmergency && <EmergencyTag>긴급</EmergencyTag>}
-                  <span style={{ color: "#6b7280", fontSize: "0.75rem" }}>
+                  <UserNameText>
                     예약자명: {res.userName}
-                  </span>
+                  </UserNameText>
                 </ReservationHeader>
-                <span
-                  style={{
-                    fontWeight: "bold",
-                    color: "#333",
-                    wordBreak: "break-all",
-                  }}
-                >
+                
+                <SpaceNameText>
                   {res.spaceName}
-                </span>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "0.25rem",
-                    fontSize: "0.875rem",
-                    fontWeight: "bold",
-                    color: "#333",
-                    marginTop: "0.1rem",
-                  }}
-                >
-                  <span>{formatDate(res.reservationFrom)}</span>
-                  <span>|</span>
-                  <span>
-                    {formatTimeRange(res.reservationFrom, res.reservationTo)}
-                  </span>
-                </div>
+                </SpaceNameText>
+                
+                <TimeInfoContainer>
+                  <ReservationTimeText>
+                    <span>{formatDate(res.reservationFrom)}</span>
+                  </ReservationTimeText>
+                  <Separator>|
+                  </Separator>
+                  <ReservationTimeText>
+                    <span>
+                      {formatTimeRange(res.reservationFrom, res.reservationTo)}
+                    </span>
+                  </ReservationTimeText>
+                </TimeInfoContainer>
 
                 {res.previsits && res.previsits.length > 0 && (
-                  <>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "0.25rem",
-                        fontSize: "0.875rem",
-                        color: "#4b5563",
-                        marginTop: "0.1rem",
-                      }}
-                    >
+                  <TimeInfoContainer>
+                    <PrevisitText>
                       <span>
                         사전답사 {formatDate(res.previsits[0]?.previsitFrom)}
                       </span>
-                      <span>|</span>
+                    </PrevisitText>
+                    <Separator>|
+                    </Separator>
+                    <PrevisitText>
                       <span>
                         {formatTimeRange(
                           res.previsits[0]?.previsitFrom,
                           res.previsits[0]?.previsitTo
                         )}
                       </span>
-                    </div>
-                  </>
+                    </PrevisitText>
+                  </TimeInfoContainer>
                 )}
               </ReservationItem>
             ))
@@ -213,29 +200,6 @@ const ReservationHeader = styled.div`
   margin-bottom: 0.5rem;
 `;
 
-const SpaceName = styled.span`
-  font-weight: bold;
-  color: #333;
-  word-break: break-all; /* 긴 이름 줄바꿈 처리 */
-  flex-grow: 1; /* 남은 공간 최대한 차지 */
-  min-width: 0; /* flex item이 넘치지 않도록 */
-`;
-
-const UserName = styled.span`
-  color: #6b7280;
-  font-size: 0.75rem;
-  word-break: break-all;
-  white-space: nowrap; /* 예약자명은 한 줄로 유지 (필요시 break-all) */
-`;
-
-const ReservationDetails = styled.div`
-  display: flex;
-  flex-wrap: wrap; /* 내용이 길면 줄바꿈 */
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  color: #4b5563;
-`;
-
 const StatusTag = styled('span', {
   shouldForwardProp: (prop) => prop !== '$statusId' && prop !== 'isApprovable',
 })<{
@@ -298,3 +262,41 @@ const ButtonWrapper = styled.div`
   margin-top: 1.5rem;
   width: 100%;
 `;
+
+const UserNameText = styled.span`
+  /* 기존 인라인 스타일: color: "#6b7280", fontSize: "0.75rem" */
+  color: #6b7280;
+  font-size: 0.75rem;
+`;
+
+const SpaceNameText = styled.span`
+  /* 기존 인라인 스타일: fontWeight: "bold", color: "#333", wordBreak: "break-all" */
+  font-weight: bold;
+  color: #333;
+  word-break: break-all;
+`;
+
+const TimeInfoContainer = styled.div`
+  /* 기존 인라인 스타일: display: "flex", gap: "0.25rem", marginTop: "0.1rem" */
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.1rem;
+`;
+
+const ReservationTimeText = styled.span`
+  /* 기존 인라인 스타일: fontSize: "0.875rem", fontWeight: "bold", color: "#333" */
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: #333;
+`;
+
+const PrevisitText = styled.span`
+  /* 기존 인라인 스타일: fontSize: "0.875rem", color: "#4b5563" */
+  font-size: 0.875rem;
+  color: #4b5563;
+`;
+
+const Separator = styled.span`
+  /* 스타일은 TimeInfoContainer에 의해 상속받거나 필요한 경우 추가 */
+`;
+

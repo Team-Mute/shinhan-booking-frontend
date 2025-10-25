@@ -16,11 +16,8 @@ import {
 } from "@admin/lib/api/adminReservation";
 import {
   FlagOption,
-  Previsit,
   RegionOption,
   Reservation,
-  ReservationResponse,
-  ReservationsParams,
   StatusOption,
 } from "@admin/types/reservationAdmin";
 
@@ -34,11 +31,9 @@ import Loader from "@admin/components/Loader";
 import InfoModal from "../../../components/modal/InfoModal";
 import { BulkApproveModal, ConfirmModal, DetailModal, RejectModal } from "./components";
 import { useModalStore } from "@admin/store/modalStore";
+import { useConfirmModalStore } from "@admin/store/confirmModalStore";
 
 const ReservationManagementPage: React.FC = () => {
-  // 로딩 상태
-  const [isLoading, setIsLoading] = useState(false);
-
   // API 데이터 및 로딩 관련 상태
   const [reservations, setReservations] = useState<Reservation[]>([]);
 
@@ -66,11 +61,6 @@ const ReservationManagementPage: React.FC = () => {
   const [selectedReservationForDetail, setSelectedReservationForDetail] =
     useState<number | null>(null);
 
-  // 단건 승인
-  const [isConfirmApproveModalOpen, setIsConfirmApproveModalOpen] =
-    useState(false);
-  const [approveTargetId, setApproveTargetId] = useState<number | null>(null);
-
   // 필터링 옵션 상태
   const [statuses, setStatuses] = useState<StatusOption[]>([]);
   const [regions, setRegions] = useState<RegionOption[]>([]);
@@ -85,10 +75,13 @@ const ReservationManagementPage: React.FC = () => {
   const [isShinhan, setIsShinhan] = useState(false);
   const [isEmergency, setIsEmergency] = useState(false);
 
-  // InfoModal을 띄우기 위해 useModalStore에서 open 액션을 가져옵니다.
+  // InfoModal을 띄우기 위해 useModalStore에서 open 액션 호출
   const openInfoModal = useModalStore(state => state.open);
 
-  // 💡 InfoModal을 띄우는 함수를 전역 상태 기반으로 변경
+  // InfoModal을 띄우기 위해 useModalStore에서 open 액션 호출
+  const openConfirmModal = useConfirmModalStore(state => state.open);
+
+  // InfoModal을 띄우는 함수를 전역 상태 기반으로 변경
   const showAlertModal = (title: string, subtitle: string, onClose?: () => void) => {
       // InfoModal의 전역 상태 'open' 액션을 호출
       // 인수를 객체가 아닌 순서대로 전달합니다.
@@ -147,19 +140,6 @@ const ReservationManagementPage: React.FC = () => {
     isEmergency,
   ]);
 
-  // UI 핸들러 함수들
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      // 승인 가능한 모든 예약의 ID만 가져옴
-      const allApprovableIds = approvableReservations.map(
-        (res) => res.reservationId
-      );
-      setSelectedItems(allApprovableIds);
-    } else {
-      setSelectedItems([]);
-    }
-  };
-
   // 페이지 변경 핸들러는 uiCurrentPage 상태만 변경합니다.
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -168,10 +148,14 @@ const ReservationManagementPage: React.FC = () => {
     }
   };
 
-  // 개별 승인 버튼 핸들러
   const handleApprove = (reservationId: number) => {
-    setApproveTargetId(reservationId);
-    setIsConfirmApproveModalOpen(true);
+    openConfirmModal(
+      "예약을 승인하시겠습니까?", // title
+      "해당 예약을 승인하면 반려하지 못합니다.", // subtitle
+      // onConfirm 콜백: ID를 인수로 전달하여 confirmSingleApprove 호출
+      () => confirmSingleApprove(reservationId), 
+      () => {} 
+    );
   };
 
   // 선택 승인 버튼 핸들러
@@ -181,12 +165,13 @@ const ReservationManagementPage: React.FC = () => {
       return;
     }
 
-    // 선택된 항목이 하나일 경우
+    // 선택된 항목이 하나일 경우 (단건 승인)
     if (selectedItems.length === 1) {
-      setApproveTargetId(selectedItems[0]);
-      setIsConfirmApproveModalOpen(true);
+      const singleReservationId = selectedItems[0];
+      // handleApprove 함수 재사용 (Store 기반 호출)
+      handleApprove(singleReservationId);
     }
-    // 여러 건 선택인 경우
+    // 여러 건 선택인 경우 (일괄 승인)
     else {
       const selectedReservationObjects = reservations.filter((res) =>
         selectedItems.includes(res.reservationId)
@@ -197,44 +182,39 @@ const ReservationManagementPage: React.FC = () => {
   };
 
   // 단건 승인 최종 확인 함수 (ConfirmModal에서 호출)
-  const confirmSingleApprove = async () => {
-    if (approveTargetId === null) return;
+  const confirmSingleApprove = async (targetId: number) => {
+  try {
+    // API 호출 (단건 승인이므로 ID 하나를 배열에 담아 전달)
+    const response = await postApproveReservationsApi([targetId]);
 
-    setIsConfirmApproveModalOpen(false);
+    // 단건 승인 응답의 results 배열 첫 번째 요소를 사용
+    const result = response.results[0];
 
-    try {
-      setIsLoading(true);
-      const response = await postApproveReservationsApi([approveTargetId]);
+    if (result.success) {
+      const successTitle = response.results[0]?.message;
+      const successMessage =
+        successTitle == "1차 승인 완료"
+          ? "최종 승인 완료를 위해 2차 승인이 필요해요."
+          : "최종적으로 예약이 승인되었어요. \n 예약자에게 예약 확정 메세지가 전송됩니다.";
 
-      // 단건 승인 응답의 results 배열 첫 번째 요소를 사용
-      const result = response.results[0];
-
-      if (result.success) {
-        const successTitle = response.results[0]?.message;
-        const successMessage =
-          successTitle == "1차 승인 완료"
-            ? "최종 승인 완료를 위해 2차 승인이 필요해요."
-            : "최종적으로 예약이 승인되었어요. \n 예약자에게 예약 확정 메세지가 전송됩니다.";
-
-        showAlertModal(successTitle, successMessage);
-      } else {
-        // 실패했을 경우, API 응답 메시지 활용
-        showAlertModal("승인 실패", result.message);
-      }
-
-      await loadReservations();
-      setSelectedItems([]);
-    } catch (err) {
-      showAlertModal(
-        "오류 발생",
-        "서버와의 통신에 실패했습니다. 잠시 후 다시 시도해주세요."
-      );
-      console.error("단건 승인 실패:", err);
-    } finally {
-      setApproveTargetId(null);
-      setIsLoading(false);
+      showAlertModal(successTitle, successMessage);
+    } else {
+      // API 응답에 따른 승인 실패 메시지
+      showAlertModal("승인 실패", result.message);
     }
-  };
+
+    // 예약 목록 다시 불러오기 및 선택된 항목 초기화
+    await loadReservations();
+    setSelectedItems([]);
+  } catch (err) {
+    // 통신 오류 처리
+    showAlertModal(
+      "오류 발생",
+      "서버와의 통신에 실패했습니다. 잠시 후 다시 시도해주세요."
+    );
+    console.error("단건 승인 실패:", err);
+  }
+  }
 
   // 일괄 승인 최종 확인 함수 (BulkApproveModal에서 호출)
   const confirmBulkApprove = async () => {
@@ -345,6 +325,20 @@ const ReservationManagementPage: React.FC = () => {
     approvableReservations.length > 0 &&
     selectedItems.length === approvableReservations.length;
   const { adminRoleId } = useAdminAuthStore();
+
+    // UI 핸들러 함수들
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      // 승인 가능한 모든 예약의 ID만 가져옴
+      const allApprovableIds = approvableReservations.map(
+        (res) => res.reservationId
+      );
+      setSelectedItems(allApprovableIds);
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
   return (
     <MainContainer>
       <Loader>
@@ -588,16 +582,7 @@ const ReservationManagementPage: React.FC = () => {
       {/* InfoModal(알림) 컴포넌트*/}
       <InfoModal/> 
       {/* 단건 승인 확인용 ConfirmModal */}
-      <ConfirmModal
-        isOpen={isConfirmApproveModalOpen}
-        title="예약을 승인하시겠습니까?"
-        subtitle="해당 예약을 승인하면 반려하지 못합니다."
-        onConfirm={confirmSingleApprove}
-        onCancel={() => {
-          setIsConfirmApproveModalOpen(false);
-          setApproveTargetId(null);
-        }}
-      />
+      <ConfirmModal/>
       {/* 일괄승인 모달 */}
       <BulkApproveModal
         isOpen={isBulkConfirmModalOpen}
@@ -631,7 +616,6 @@ const ReservationManagementPage: React.FC = () => {
     </MainContainer>
   );
 };
-
 export default ReservationManagementPage;
 
 // --- styled ---

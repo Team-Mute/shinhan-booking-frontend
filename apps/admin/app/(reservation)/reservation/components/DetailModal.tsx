@@ -81,19 +81,6 @@ const DetailModal: React.FC<DetailModalProps> = ({
   const isPending =
     reservation.reservationStatusName === "1차 승인 대기" ||
     reservation.reservationStatusName === "2차 승인 대기";
-  const formatPhoneNumber = (phoneNumber: string) => {
-    if (!phoneNumber) return ["", "", ""];
-    const parts = phoneNumber.split("-");
-    if (parts.length === 3) return parts;
-    if (phoneNumber.length === 11) {
-      return [
-        phoneNumber.substring(0, 3),
-        phoneNumber.substring(3, 7),
-        phoneNumber.substring(7, 11),
-      ];
-    }
-    return [phoneNumber];
-  };
 
   return (
     <Overlay onClick={onClose}>
@@ -137,23 +124,19 @@ const DetailModal: React.FC<DetailModalProps> = ({
           {isPending && reservationId && (
             <>
               <ApproveButton
-                //disabled={!reservation.isApprovable}
                 onClick={() => {
                   onApproveClick(reservationId);
                   onClose(); 
                 }}
-                width="48%"
                 isActive={reservation.isApprovable}
               >
                 승인하기
               </ApproveButton>
               <RejectButton
-                //disabled={!reservation.isRejectable}
                 onClick={() => { 
                   onRejectClick(reservationId);
                   onClose(); 
                 }}
-                width="48%"
                 isActive={reservation.isRejectable}
               >
                 반려하기
@@ -270,6 +253,7 @@ const ApproveButton = styled(Button)`
     background-color: #d0e0ff; /* 호버 시 배경색 */
   }
   cursor: pointer;
+  width="48%";
 `;
 
 const RejectButton = styled(Button)`
@@ -279,6 +263,7 @@ const RejectButton = styled(Button)`
     background-color: #ffe0e0; /* 호버 시 배경색 */
   }
   cursor: pointer;
+  width="48%";
 `;
 
 const TwoButtonWrapper = styled.div`
