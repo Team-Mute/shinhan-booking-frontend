@@ -430,6 +430,10 @@ const handleNextGroup = useCallback(() => {
     isEmergency,
     adminRoleId,
 
+    // 필터링 상태
+    selectedStatusId,
+    selectedRegionId,
+
     // 페이지네이션
     uiCurrentPage,
     totalPages,

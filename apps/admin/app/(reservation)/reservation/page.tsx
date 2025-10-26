@@ -16,6 +16,7 @@ import { BulkApproveModal, ConfirmModal, DetailModal, RejectModal } from "./comp
 import { useReservation } from "./hooks/useReservation";
 import Pagination from "@components/ui/pagination/Pagination";
 import SearchBar from "@components/ui/searchbar/Searchbar";
+import FilterSelectBox from "@components/ui/selectbox/FilterSelectBox";
 
 /**
  * ReservationManagementPage 컴포넌트
@@ -40,6 +41,10 @@ const ReservationManagementPage: React.FC = () => {
     isShinhan,
     isEmergency,
     adminRoleId,
+
+    // 필터링 상태
+    selectedStatusId,
+    selectedRegionId,
 
     // 페이지네이션
     uiCurrentPage,
@@ -86,6 +91,31 @@ const ReservationManagementPage: React.FC = () => {
     handleDetailModalClose,
     handleBulkConfirmModalClose,
   } = useReservation();
+
+  // SelectBox2에 사용될 옵션 데이터 변환
+  const statusOptions = React.useMemo(() => {
+      // '예약 상태 전체' 옵션을 추가
+      return [
+          { label: "예약 상태 전체", value: "" },
+          ...statuses.map((status) => ({
+              label: status.label,
+              value: String(status.id), // SelectBox2는 string value를 사용
+          })),
+      ];
+  }, [statuses]);
+
+  const regionOptions = React.useMemo(() => {
+      // '지점' 옵션을 추가
+      return [
+          { label: "지점", value: "" },
+          ...regions.map((region) => ({
+              label: region.regionName,
+              value: String(region.regionId), // SelectBox2는 string value를 사용
+          })),
+      ];
+  }, [regions]);
+
+
 return (
     <MainContainer>
       <Loader>
@@ -97,35 +127,19 @@ return (
       {/* Filter and Search Section (Responsive) */}
       <FilterSearchWrapper>
         {/* 예약 상태 드롭다운 */}
-        <DropdownContainer>
-          <StyledSelect
-            // 훅의 핸들러 사용
-            onChange={(e) => handleFilterChange("status", e.target.value)}
-          >
-            <option value="">예약 상태 전체</option>
-            {statuses.map((status) => (
-              <option key={status.id} value={status.id}>
-                {status.label}
-              </option>
-            ))}
-          </StyledSelect>
-        </DropdownContainer>
+        <FilterSelectBox
+          options={statusOptions}
+          value={selectedStatusId ? String(selectedStatusId) : ""} 
+          onChange={(value) => handleFilterChange("status", value)}
+        />
 
         {/* 지점 드롭 다운은 2차 승인자, master만 적용 */}
         {adminRoleId === 0 || adminRoleId === 1 ? (
-          <DropdownContainer>
-            <StyledSelect
-              // 훅의 핸들러 사용
-              onChange={(e) => handleFilterChange("region", e.target.value)}
-            >
-              <option value="">지점</option>
-              {regions.map((region) => (
-                <option key={region.regionId} value={region.regionId}>
-                  {region.regionName}
-                </option>
-              ))}
-            </StyledSelect>
-          </DropdownContainer>
+          <FilterSelectBox
+            options={regionOptions}
+            value={selectedRegionId ? String(selectedRegionId) : ""} 
+            onChange={(value) => handleFilterChange("region", value)}
+          />
         ) : null}
         <SearchBarWrapper>
           <SearchBar
@@ -397,38 +411,6 @@ const FilterSearchWrapper = styled.div`
   margin-bottom: 1.5rem;
   @media (min-width: 768px) {
     flex-direction: row;
-  }
-`;
-
-const DropdownContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 8px 12px;
-  gap: 12px;
-
-  // 너비를 유연하게 조절
-  flex: 1;
-  min-width: 60px;
-  max-width: 150px;
-
-  height: 41px;
-  background: #f3f4f4;
-  border-radius: 12px;
-`;
-
-// select 태그에 직접 적용할 스타일
-const StyledSelect = styled.select`
-  border: none;
-  background: transparent;
-  width: 100%;
-  height: 100%;
-  font-size: 14px;
-  color: #1a1a1a;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
   }
 `;
 
