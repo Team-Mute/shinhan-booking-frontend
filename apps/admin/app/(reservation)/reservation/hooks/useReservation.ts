@@ -42,8 +42,11 @@ export const useReservation = () => {
   const [reservations, setReservations] = useState<ReservationListItemDTO[]>([]);
 
   // 페이지네이션 관련 상태
+  const PAGE_GROUP_SIZE = 5; // 한 페이지의 데이터 개수
   const [uiCurrentPage, setUiCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [startPage, setStartPage] = useState(1);
+  const [endPage, setEndPage] = useState(1);
 
   // 체크박스 선택 관련 상태
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
@@ -70,8 +73,6 @@ export const useReservation = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedReservationForDetail, setSelectedReservationForDetail] = useState<number | null>(null);
-  // -----------------------
-
 
   // --- 데이터 패칭 로직 ---
 
@@ -371,6 +372,52 @@ export const useReservation = () => {
   }, []);
 
 
+  /**
+ * 페이지 그룹 계산 로직 (uiCurrentPage가 바뀔 때마다 실행)
+ * - 현재 페이지를 기준으로 startPage와 endPage를 계산합니다.
+ */
+useEffect(() => {
+  // totalPages가 0보다 클 때만 계산
+  if (totalPages > 0) {
+    // 1. startPage 계산: 현재 페이지가 속한 그룹의 시작 페이지
+    const currentGroup = Math.ceil(uiCurrentPage / PAGE_GROUP_SIZE);
+    const calculatedStartPage = (currentGroup - 1) * PAGE_GROUP_SIZE + 1;
+    
+    // 2. endPage 계산: 그룹의 마지막 페이지와 전체 페이지 수 중 더 작은 값
+    const calculatedEndPage = Math.min(
+      calculatedStartPage + PAGE_GROUP_SIZE - 1,
+      totalPages
+    );
+    
+    setStartPage(calculatedStartPage);
+    setEndPage(calculatedEndPage);
+  } else {
+    // totalPages가 0이면 초기화
+    setStartPage(1);
+    setEndPage(1);
+  }
+}, [uiCurrentPage, totalPages]); // uiCurrentPage나 totalPages가 바뀔 때 실행
+
+
+// 이전 페이지 그룹으로 이동
+const handlePrevGroup = useCallback(() => {
+  if (startPage > 1) {
+    // 이전 그룹의 마지막 페이지로 이동 (예: 11페이지 그룹에서 1페이지로)
+    const newPage = startPage - 1; 
+    handlePageChange(newPage);
+  }
+}, [startPage, handlePageChange]); // handlePageChange는 아마도 이미 useCallback으로 정의되어 있을 것입니다.
+
+// 다음 페이지 그룹으로 이동
+ 
+const handleNextGroup = useCallback(() => {
+  if (endPage < totalPages) {
+    // 다음 그룹의 시작 페이지로 이동 (예: 10페이지 그룹에서 11페이지로)
+    const newPage = endPage + 1;
+    handlePageChange(newPage);
+  }
+}, [endPage, totalPages, handlePageChange]);
+
   // --- 반환 값 ---
   return {
     // 데이터 및 상태
@@ -386,6 +433,10 @@ export const useReservation = () => {
     // 페이지네이션
     uiCurrentPage,
     totalPages,
+    startPage,      
+    endPage,
+    handlePrevGroup, 
+    handleNextGroup,
 
     // 체크박스 선택
     selectedItems,
@@ -422,6 +473,6 @@ export const useReservation = () => {
     handleRejectModalClose, 
     handleDetailClick,
     handleDetailModalClose,
-    handleBulkConfirmModalClose 
+    handleBulkConfirmModalClose,
   };
 };

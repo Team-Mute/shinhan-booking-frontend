@@ -14,6 +14,7 @@ import Loader from "@admin/components/Loader";
 import InfoModal from "../../../components/modal/InfoModal";
 import { BulkApproveModal, ConfirmModal, DetailModal, RejectModal } from "./components";
 import { useReservation } from "./hooks/useReservation";
+import Pagination from "@components/ui/pagination/Pagination";
 
 /**
  * ReservationManagementPage 컴포넌트
@@ -42,6 +43,10 @@ const ReservationManagementPage: React.FC = () => {
     // 페이지네이션
     uiCurrentPage,
     totalPages,
+    startPage,      
+    endPage,
+    handlePrevGroup, 
+    handleNextGroup,
 
     // 체크박스
     selectedItems,
@@ -78,7 +83,7 @@ const ReservationManagementPage: React.FC = () => {
     handleRejectModalClose,
     handleDetailClick,
     handleDetailModalClose,
-    handleBulkConfirmModalClose
+    handleBulkConfirmModalClose,
   } = useReservation();
 return (
     <MainContainer>
@@ -280,31 +285,15 @@ return (
       </ReservationList>
 
       {/* Pagination */}
-      <PaginationNav>
-        <PaginationList>
-          <PaginationItem
-            isArrow
-            onClick={() => handlePageChange(uiCurrentPage - 1)}
-          >
-            {"<"}
-          </PaginationItem>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <PaginationItem
-              key={page}
-              isActive={page === uiCurrentPage}
-              onClick={() => handlePageChange(page)}
-            >
-              {page}
-            </PaginationItem>
-          ))}
-          <PaginationItem
-            isArrow
-            onClick={() => handlePageChange(uiCurrentPage + 1)}
-          >
-            {">"}
-          </PaginationItem>
-        </PaginationList>
-      </PaginationNav>
+      <Pagination
+      currentPage={uiCurrentPage}
+      totalPages={totalPages}
+      startPage={startPage}
+      endPage={endPage}
+      onPageChange={handlePageChange}
+      onPrevGroup={handlePrevGroup}
+      onNextGroup={handleNextGroup}
+    />
 
       {/* InfoModal(알림) 컴포넌트 */}
       <InfoModal/>
@@ -792,78 +781,6 @@ const RejectActionButton = styled(ActionButton)`
   &:hover:not(:disabled) {
     background-color: #ffd1d1;
   }
-`;
-
-// 페이지네이션 Wrapper
-const PaginationNav = styled.nav`
-  /* 피그마 CSS 기반 스타일 적용 */
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 0;
-  gap: 8px;
-
-  /* 기존 스타일 유지 및 일부 조정 */
-  justify-content: center;
-  margin-top: 2rem;
-`;
-
-// 페이지네이션 UL
-const PaginationList = styled.ul`
-  display: flex;
-  list-style: none;
-  padding: 0;
-  gap: 0.25rem; /* 항목 간 간격 줄이기 */
-`;
-
-// 페이지네이션 각 항목
-const PaginationItem = styled.li<{ isActive?: boolean; isArrow?: boolean }>`
-  /* 기본 스타일 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-
-  background-color: transparent;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #4b5563;
-  transition: all 0.2s ease;
-
-  /* 활성 상태 스타일 */
-  ${(props) =>
-    props.isActive &&
-    css`
-      background-color: #e8e9e9;
-      color: #000000;
-    `}
-
-  /* 비활성 상태 스타일 (눌리지 않은 숫자) */
-    ${(props) =>
-    !props.isActive &&
-    !props.isArrow &&
-    css`
-      background-color: transparent;
-      &:hover {
-        background-color: #f3f4f6;
-      }
-      color: #8c8f93;
-    `}
-
-    /* 화살표 버튼 스타일 */
-    ${(props) =>
-    props.isArrow &&
-    css`
-      background-color: transparent;
-      border: none;
-
-      &:hover {
-        background-color: transparent;
-      }
-    `}
 `;
 
 const ShinhanTag = styled.span`
