@@ -68,6 +68,7 @@ export default function SpacePage() {
             searchValue={keyword}
             onSearchChange={setKeyword}
             onSearch={handleSearch}
+            isDropdownVisible={true}
           />
         </SearchBarWrapper>
 

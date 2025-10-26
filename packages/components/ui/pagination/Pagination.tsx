@@ -2,6 +2,8 @@ import React from "react";
 import styled from "@emotion/styled";
 import colors from "@styles/theme";
 /**
+ * Pagination.tsx
+ * 
  * 페이지네이션 컴포넌트
  *
  * 이 컴포넌트는 페이지 목록을 탐색할 수 있는 페이지네이션 컨트롤을 렌더링합니다.

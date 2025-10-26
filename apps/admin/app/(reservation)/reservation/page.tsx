@@ -15,6 +15,7 @@ import InfoModal from "../../../components/modal/InfoModal";
 import { BulkApproveModal, ConfirmModal, DetailModal, RejectModal } from "./components";
 import { useReservation } from "./hooks/useReservation";
 import Pagination from "@components/ui/pagination/Pagination";
+import SearchBar from "@components/ui/searchbar/Searchbar";
 
 /**
  * ReservationManagementPage 컴포넌트
@@ -126,22 +127,15 @@ return (
             </StyledSelect>
           </DropdownContainer>
         ) : null}
-        <SearchInputContainer>
-          <SearchInput
-            type="text"
-            placeholder="예약자명, 공간으로 검색"
-            // 입력창의 현재 값을 keyword 상태와 연결
-            value={keyword}
-            // 입력값이 변경될 때마다 keyword 상태 업데이트
-            onChange={(e) => handleKeywordChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                // 엔터 키를 누르면 훅의 검색 실행 함수 호출
-                handleKeywordSearch();
-              }
-            }}
+        <SearchBarWrapper>
+          <SearchBar
+            placeholder="예약자명 또는 공간명을 검색하세요."
+            searchValue={keyword}
+            onSearchChange={handleKeywordChange}
+            onSearch={handleKeywordSearch}
+            isDropdownVisible={false}
           />
-        </SearchInputContainer>
+        </SearchBarWrapper>
 
         <ActionButtons>
           {flags.map((flag) => (
@@ -466,33 +460,10 @@ const FilterButton = styled.button<{ isActive?: boolean }>`
   }
 `;
 
-const SearchInputContainer = styled.div`
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  gap: 8px;
-
-  /* 너비 조절 */
-  flex: 1; /* 남은 공간을 모두 채우도록 변경 */
-  min-width: 250px; /* 최소 너비를 250px로 늘려 너무 좁아지지 않게 함 */
-  max-width: 500px; /* 최대 너비를 500px로 제한 */
-  height: 41px;
-
-  background: #f3f4f4;
-  border-radius: 12px;
+const SearchBarWrapper = styled.div`
+  width: 50%;
 `;
 
-const SearchInput = styled.input`
-  border: none;
-  background: transparent;
-  width: 100%;
-  font-size: 14px;
-  color: #1a1a1a;
-
-  &:focus {
-    outline: none;
-  }
-`;
 const ActionButtons = styled.div`
   display: flex;
   justify-content: flex-end;
