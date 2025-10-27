@@ -103,7 +103,7 @@ const SelectedBox = styled.div`
 `;
 
 const Placeholder = styled.span`
-  color: #a0a0a0; /* (임시) graycolor50 대신 일반적인 회색 */
+  color: #a0a0a0; 
 `;
 
 const ArrowWrapper = styled.div`
@@ -111,7 +111,7 @@ const ArrowWrapper = styled.div`
   flex-direction: column;
   line-height: 1;
   svg {
-    color: #a0a0a0; /* (임시) graycolor50 대신 일반적인 회색 */
+    color: #a0a0a0;
   }
 `;
 
@@ -136,13 +136,9 @@ const OptionItem = styled.li<{ isSelected: boolean }>`
   padding: 10px 12px;
   font-size: 14px;
   cursor: pointer;
-  
-  /* (임시) selected/hover 색상. 실제 프로젝트 색상으로 변경 필요 */
   background-color: ${({ isSelected }) =>
     isSelected ? '#F2F6FF' : 'white'}; /* 선택 시 연한 파랑 */
-    
   color: #1A1A1A;
-
   &:hover {
     background-color: '#F2F6FF'; /* 호버 시 연한 파랑 */
     color: '#1A1A1A'; /* 호버 시 진한 파랑 */

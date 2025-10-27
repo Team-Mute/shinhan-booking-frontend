@@ -3,17 +3,17 @@ import { IoCloseOutline } from "react-icons/io5";
 import Button from "@components/ui/button/Button";
 import {
   formatDate,
-  formatTimeRange,
-  getStatusStyle,
+  formatTimeRange
 } from "@admin/lib/utils/reservationUtils";
-import { Reservation } from "@admin/types/dto/reservation.dto";
+import { ReservationListItemDTO } from "@admin/types/dto/reservation.dto";
+import { getStatusStyle } from "@styles/statusStyles";
 
 /** 
  * 선택 승인 모달 창
  */
 interface BulkApproveModalProps {
   isOpen: boolean;
-  reservations: Reservation[];
+  reservations: ReservationListItemDTO[];
   onConfirm: () => void;
   onCancel: () => void;
 }

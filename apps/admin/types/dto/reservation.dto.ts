@@ -16,7 +16,6 @@
  *
  * - 예약 목록 항목 DTO: ReservationListItemDTO
  * - 예약 상세 정보 DTO: ReservationDetailResponse
- * - 예약 기본 모델: ReservationModel
  *
  * - 예약 상태 옵션 DTO: StatusOptionDTO
  * - 지역 옵션 DTO: RegionOptionDTO
@@ -70,12 +69,6 @@ export interface ReservationListItemDTO {
   regionId: number;
   statusId: number;
 }
-
-/**
- * 컴포넌트 Props 등에서 사용되는 예약 기본 모델 (Reservation의 역할 유지)
- * ReservationListItemDTO와 동일한 구조를 가지지만, 컴포넌트에서 순수 데이터 모델로 사용됨을 명시
- */
-export interface ReservationModel extends ReservationListItemDTO {}
 
 /** 예약 목록 조회 요청 DTO */
 export interface ReservationListParams {

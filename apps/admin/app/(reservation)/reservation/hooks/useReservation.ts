@@ -196,7 +196,7 @@ export const useReservation = () => {
           const successMessage =
             successTitle === "1차 승인 완료"
               ? "최종 승인 완료를 위해 2차 승인이 필요해요."
-              : "최종적으로 예약이 승인되었어요. \n 예약자에게 예약 확정 메세지가 전송됩니다.";
+              : "최종적으로 예약이 승인되었어요. \n 예약자에게 예약 확정 이메일이 전송됩니다.";
           showAlertModal(successTitle, successMessage);
         } else {
           showAlertModal("승인 실패", result.message);
@@ -208,7 +208,7 @@ export const useReservation = () => {
           const successMessage =
             successTitle === "1차 승인 완료"
               ? "최종 승인 완료를 위해 2차 승인이 필요해요."
-              : "최종적으로 예약이 승인되었어요. \n 예약자에게 예약 확정 메세지가 전송됩니다.";
+              : "최종적으로 예약이 승인되었어요. \n 예약자에게 예약 확정 이메일이 전송됩니다.";
           showAlertModal(successTitle, successMessage);
         } else if (failureCount > 0) {
           showAlertModal(
@@ -298,7 +298,7 @@ export const useReservation = () => {
       await postRejectReservationApi(selectedReservationIdToReject, rejectionReason);
       showAlertModal(
         "반려 완료",
-        "해당 예약이 반려되었습니다.\n사용자에게 반려 메시지가 전송됩니다."
+        "해당 예약이 반려되었습니다.\n사용자에게 반려 이메일이 전송됩니다."
       );
 
       // 상태 초기화 및 데이터 다시 로드

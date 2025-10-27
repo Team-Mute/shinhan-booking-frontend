@@ -7,16 +7,11 @@ import styled from "@emotion/styled";
 import { IoCheckmarkSharp } from "react-icons/io5"; // 체크마크 아이콘 추가
 import {
   formatDate,
-  formatTimeRange,
-  getStatusStyle,
+  formatTimeRange
 } from "@admin/lib/utils/reservationUtils";
-import Loader from "@admin/components/Loader";
-import InfoModal from "../../../components/modal/InfoModal";
-import { BulkApproveModal, ConfirmModal, DetailModal, RejectModal } from "./components";
+import { BulkApproveModal, ConfirmModal, DetailModal, RejectModal, InfoModal, Loader, Pagination, SearchBar, FilterSelectBox} from "./components";
 import { useReservation } from "./hooks/useReservation";
-import Pagination from "@components/ui/pagination/Pagination";
-import SearchBar from "@components/ui/searchbar/Searchbar";
-import FilterSelectBox from "@components/ui/selectbox/FilterSelectBox";
+import { getStatusStyle } from "@styles/statusStyles";
 
 /**
  * ReservationManagementPage 컴포넌트
