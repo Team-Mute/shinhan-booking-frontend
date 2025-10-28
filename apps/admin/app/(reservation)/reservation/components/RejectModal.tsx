@@ -3,6 +3,9 @@ import styled from "@emotion/styled";
 import { IoCloseOutline } from "react-icons/io5";
 import Button from "@components/ui/button/Button";
 
+/** 
+ * 예약 반려 사유 작성 창
+ */
 interface RejectModalProps {
   isOpen: boolean;
   onClose: () => void;

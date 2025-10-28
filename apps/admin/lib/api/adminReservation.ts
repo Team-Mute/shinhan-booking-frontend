@@ -1,8 +1,17 @@
 import { isAxiosError } from "axios";
 import adminAxiosClient from "./adminAxiosClient";
-import { ApproveResponse, FlagOption, Previsit, RegionOption, Reservation, ReservationDetail, ReservationResponse, ReservationsParams, StatusOption } from "@/types/reservationAdmin";
+import { ReservationApproveResponse, FlagOptionDTO, RegionOptionDTO, ReservationDetailResponse, ReservationListResponse, ReservationListParams, StatusOptionDTO } from "@admin/types/dto/reservation.dto";
 
-// 예약 관리 리스트 호출 API
+/**
+ * 예약 관리 리스트 호출 API
+ * @param page 현재 페이지 번호 (1부터 시작)
+ * @param size 페이지 크기 (한 페이지에 보여줄 데이터의 개수)
+ * @param keyword 조회할 키워드 검색(예약자명 or 공간명)
+ * @param statusId 조회할 예약 상태 ID
+ * @param regionId 조회할 지역 ID
+ * @param isShinhan 조회할 신한 예약
+ * @param isEmergency 조회할 긴급 예약
+ *  **/ 
 export const getReservationApi = async ({
     page,
     size,
@@ -11,7 +20,7 @@ export const getReservationApi = async ({
     regionId,
     isShinhan,
     isEmergency,
-}: ReservationsParams): Promise<ReservationResponse> => {
+}: ReservationListParams): Promise<ReservationListResponse> => {
     try {
         const params = new URLSearchParams();
         if (keyword) params.append('keyword', keyword);
@@ -25,7 +34,7 @@ export const getReservationApi = async ({
 
         const url = `/api/reservations-admin/search?${params.toString()}`;
         
-        const response = await adminAxiosClient.get<ReservationResponse>(url);
+        const response = await adminAxiosClient.get<ReservationListResponse>(url);
         return response.data;
         
     } catch (error) {
@@ -38,9 +47,9 @@ export const getReservationApi = async ({
  * 하나 또는 여러 개의 예약 ID를 배열로 받아 승인 요청 진행
  * @param reservationIds 승인할 예약 ID 배열
  */
-export const postApproveReservationsApi = async (reservationIds: number[]): Promise<ApproveResponse> => {
+export const postApproveReservationsApi = async (reservationIds: number[]): Promise<ReservationApproveResponse> => {
     try {
-        const response = await adminAxiosClient.post<ApproveResponse>(
+        const response = await adminAxiosClient.post<ReservationApproveResponse>(
             '/api/reservations-admin/approve',
             { reservationIds }
         );
@@ -54,7 +63,7 @@ export const postApproveReservationsApi = async (reservationIds: number[]): Prom
         if (isAxiosError(error)) {
             // 서버가 응답을 보냈고, 그 상태 코드가 2xx가 아닌 경우
             if (error.response) {
-                return error.response.data as ApproveResponse;
+                return error.response.data as ReservationApproveResponse;
             } 
             // 요청은 보냈지만 응답을 받지 못한 경우 (네트워크 오류 등)
             else if (error.request) {
@@ -86,11 +95,13 @@ export const postRejectReservationApi = async (reservationId: number, rejectionR
     return response.data;
 };
 
-// 상세 조회 API
-export const getReservationDetailApi = async (reservationId: number): Promise<ReservationDetail> => {
+/** 
+ * 상세 조회 API 
+ * **/
+export const getReservationDetailApi = async (reservationId: number): Promise<ReservationDetailResponse> => {
     try {
         const url = `/api/reservations-admin/detail/${reservationId}`;
-        const response = await adminAxiosClient.get<ReservationDetail>(url);
+        const response = await adminAxiosClient.get<ReservationDetailResponse>(url);
 
         return response.data;
         
@@ -100,18 +111,23 @@ export const getReservationDetailApi = async (reservationId: number): Promise<Re
     }
 };
 
-// 필터링 드롭 다운
-export const getStatusOptions = async (): Promise<StatusOption[]> => {
+/** 
+ * 필터링 드롭 다운 구성 API
+ * **/
+// 예약 상태 리스트
+export const getStatusOptions = async (): Promise<StatusOptionDTO[]> => {
   const response = await adminAxiosClient.get(`/api/reservations-admin/filter-options/statuses`);
   return response.data;
 };
 
-export const getRegionOptions = async (): Promise<RegionOption[]> => {
+// 지역 리스트
+export const getRegionOptions = async (): Promise<RegionOptionDTO[]> => {
   const response = await adminAxiosClient.get(`/api/spaces/regions`);
   return response.data;
 };
 
-export const getFlagOptions = async (): Promise<FlagOption[]> => {
+// 긴급 보기 or 신한 보기
+export const getFlagOptions = async (): Promise<FlagOptionDTO[]> => {
   const response = await adminAxiosClient.get(`/api/reservations-admin/filter-options/flags`);
   return response.data;
 };
