@@ -54,8 +54,6 @@ const SpaceFormModal: React.FC<SpaceFormModalProps> = ({
     if (!isOpen) return;
 
     if (initialData) {
-      console.log("initialData", initialData);
-
       // SpaceDetailResponse → SpacePayload 형태로 변환
       const mapped: SpacePayload = {
         spaceName: initialData.spaceName,

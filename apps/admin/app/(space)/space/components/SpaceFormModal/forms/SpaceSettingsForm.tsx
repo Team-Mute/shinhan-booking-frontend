@@ -36,13 +36,6 @@ const SpaceSettingsForm: React.FC<Props> = ({
     setInitialImageUrls,
   });
 
-  console.log("initial image urls in setting page:", initialImageUrls);
-
-  // 💡 로그 추가: 컴포넌트 렌더링 시점의 vm.files 상태 확인
-  // useEffect(() => {
-  //   console.log("Form: vm.files ready length:", vm.files.length, vm.files);
-  // }, [vm.files]);
-
   // 2. View-specific 상태: Drag & Drop UI 피드백에 관련된 상태는 View에 남겨둠
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
