@@ -2,7 +2,7 @@
 export { default as Button } from "./ui/button/Button";
 export { default as FilteringButton } from "./ui/button/FilteringButton";
 export { default as IconButton } from "./ui/button/IconButton";
-export { default as ModalButton } from "./ui/button/ModalButton";
+// export { default as ModalButton } from "../../apps/user/components/ModalButton";
 
 // common/input
 export { default as Input } from "./ui/input/Input";
