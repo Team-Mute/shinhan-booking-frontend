@@ -2,10 +2,13 @@ import React, { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import { IoCloseOutline } from "react-icons/io5";
 import Button from "@components/ui/button/Button";
-import { ReservationDetail } from "@admin/types/reservationAdmin";
+import { ReservationDetailResponse } from "@admin/types/dto/reservation.dto";
 import { getReservationDetailApi } from "@admin/lib/api/adminReservation";
 import { useModalStore } from "@admin/store/modalStore";
 
+/** 
+ * 상세 보기 모달 창
+ */
 interface DetailModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -21,10 +24,10 @@ const DetailModal: React.FC<DetailModalProps> = ({
   onApproveClick,
   onRejectClick,
 }) => {
-  const [reservation, setReservation] = useState<ReservationDetail | null>(
+  const [reservation, setReservation] = useState<ReservationDetailResponse | null>(
     null
   );
-  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
   const { open } = useModalStore();
 
   useEffect(() => {
@@ -33,17 +36,15 @@ const DetailModal: React.FC<DetailModalProps> = ({
         setReservation(null);
         return;
       }
-
-      setIsLoading(true);
       try {
         const data = await getReservationDetailApi(reservationId);
         setReservation(data);
+        setIsError(false);
       } catch (err) {
         // 에러 발생 시 reservation을 null로 유지
         console.error("Failed to fetch reservation details", err);
         setReservation(null);
-      } finally {
-        setIsLoading(false);
+        setIsError(true);
       }
     };
 
@@ -52,49 +53,27 @@ const DetailModal: React.FC<DetailModalProps> = ({
     }
   }, [isOpen, reservationId]);
 
+  useEffect(() => {
+    if (isOpen && isError) {
+      open(
+        "오류 발생",
+        "예약 상세 정보를 불러오지 못했거나 정보를 찾을 수 없습니다.",
+        onClose
+      );
+    }
+    }, [isOpen, isError, open, onClose]); // isError 상태에 반응
+
   // -------------------- 렌더링 로직 시작 --------------------
   if (!isOpen) return null;
 
-  // 1. 로딩 중인 경우
-  if (isLoading) {
-    return (
-      <Overlay>
-        <ModalContainer>
-          <div>로딩 중...</div>
-        </ModalContainer>
-      </Overlay>
-    );
+  // API 호출 실패 또는 데이터가 없는 경우
+ if (isError || !reservation) { 
+    return null;
   }
-
-  // 2. API 호출 실패 또는 데이터가 없는 경우
-  if (!reservation) {
-    open(
-      "오류 발생",
-      "예약 상세 정보를 불러오지 못했거나 정보를 찾을 수 없습니다.",
-      onClose
-    );
-  }
-
-  // 3. 모든 데이터가 유효한 경우, 실제 모달 내용 렌더링
+  // 모든 데이터가 유효한 경우, 실제 모달 내용 렌더링
   const isPending =
     reservation.reservationStatusName === "1차 승인 대기" ||
     reservation.reservationStatusName === "2차 승인 대기";
-  const formatPhoneNumber = (phoneNumber: string) => {
-    if (!phoneNumber) return ["", "", ""];
-    const parts = phoneNumber.split("-");
-    if (parts.length === 3) return parts;
-    if (phoneNumber.length === 11) {
-      return [
-        phoneNumber.substring(0, 3),
-        phoneNumber.substring(3, 7),
-        phoneNumber.substring(7, 11),
-      ];
-    }
-    return [phoneNumber];
-  };
-  const [phonePart1, phonePart2, phonePart3] = formatPhoneNumber(
-    reservation.user.phone
-  );
 
   return (
     <Overlay onClick={onClose}>
@@ -110,7 +89,7 @@ const DetailModal: React.FC<DetailModalProps> = ({
           <DetailSection>
             <InfoRow>
               <InfoLabel>예약 공간</InfoLabel>
-              <InputField>{reservation.spaceName}</InputField>
+              <InputField>{reservation?.spaceName}</InputField>
             </InfoRow>
             <InfoRow>
               <InfoLabel>예약자명</InfoLabel>
@@ -123,14 +102,6 @@ const DetailModal: React.FC<DetailModalProps> = ({
             <InfoRow>
               <InfoLabel>사용 목적</InfoLabel>
               <InputField>{reservation.reservationPurpose}</InputField>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>예약자 전화번호</InfoLabel>
-              <PhoneInputGroup>
-                <PhoneInputField>{phonePart1}</PhoneInputField>
-                <PhoneInputField>{phonePart2}</PhoneInputField>
-                <PhoneInputField>{phonePart3}</PhoneInputField>
-              </PhoneInputGroup>
             </InfoRow>
             <InfoRow>
               <InfoLabel>예약자 이메일</InfoLabel>
@@ -146,17 +117,19 @@ const DetailModal: React.FC<DetailModalProps> = ({
           {isPending && reservationId && (
             <>
               <ApproveButton
-                //disabled={!reservation.isApprovable}
-                onClick={() => onApproveClick(reservationId)}
-                width="48%"
+                onClick={() => {
+                  onApproveClick(reservationId);
+                  onClose(); 
+                }}
                 isActive={reservation.isApprovable}
               >
                 승인하기
               </ApproveButton>
               <RejectButton
-                //disabled={!reservation.isRejectable}
-                onClick={() => onRejectClick(reservationId)}
-                width="48%"
+                onClick={() => { 
+                  onRejectClick(reservationId);
+                  onClose(); 
+                }}
                 isActive={reservation.isRejectable}
               >
                 반려하기
@@ -258,17 +231,6 @@ const InputField = styled.div`
   white-space: pre-wrap; /* 사용 목적처럼 여러 줄 입력 처리 */
 `;
 
-const PhoneInputGroup = styled.div`
-  display: flex;
-  gap: 0.5rem; /* 전화번호 각 부분 사이 간격 */
-  width: 100%;
-`;
-
-const PhoneInputField = styled(InputField)`
-  flex: 1; /* 세 부분이 동일한 너비를 갖도록 */
-  text-align: center; /* 전화번호 가운데 정렬 */
-`;
-
 const ModalFooter = styled.div`
   display: flex;
   justify-content: space-between; /* 버튼들을 양 끝으로 정렬 */
@@ -284,6 +246,7 @@ const ApproveButton = styled(Button)`
     background-color: #d0e0ff; /* 호버 시 배경색 */
   }
   cursor: pointer;
+  width="48%";
 `;
 
 const RejectButton = styled(Button)`
@@ -293,6 +256,7 @@ const RejectButton = styled(Button)`
     background-color: #ffe0e0; /* 호버 시 배경색 */
   }
   cursor: pointer;
+  width="48%";
 `;
 
 const TwoButtonWrapper = styled.div`

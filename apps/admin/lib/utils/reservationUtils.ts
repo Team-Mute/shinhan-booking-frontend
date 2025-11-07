@@ -1,5 +1,10 @@
-import { css } from '@emotion/react';
-
+/**
+ * 주어진 날짜 문자열을 'YYYY년 MM월 DD일 (요일)' 형식의 문자열로 변환합니다.
+ * 예: "2023-10-27T10:00:00Z" -> "2023년 10월 27일 (금)"
+ *
+ * @param dateStr ISO 8601 형식의 날짜 및 시간 문자열 (예: "2023-10-27T10:00:00Z").
+ * @returns 'YYYY년 MM월 DD일 (요일)' 형식의 문자열.
+ */
 export const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
     const year = date.getFullYear();
@@ -9,6 +14,14 @@ export const formatDate = (dateStr: string): string => {
     return `${year}년 ${month}월 ${day}일 (${weekday})`;
 };
 
+/**
+ * 두 개의 날짜/시간 문자열에서 시간 정보만을 추출하여 'HH:MM~HH:MM' 형식의 시간 범위 문자열로 변환합니다.
+ * 예: "2023-10-27T10:00:00Z", "2023-10-27T12:30:00Z" -> "10:00~12:30"
+ *
+ * @param fromStr 시작 날짜 및 시간 문자열 (ISO 8601 형식).
+ * @param toStr 종료 날짜 및 시간 문자열 (ISO 8601 형식).
+ * @returns '시작시:분~종료시:분' 형식의 문자열.
+ */
 export const formatTimeRange = (fromStr: string, toStr: string): string => {
     const fromDate = new Date(fromStr);
     const toDate = new Date(toStr);
@@ -17,23 +30,4 @@ export const formatTimeRange = (fromStr: string, toStr: string): string => {
     const toHours = toDate.getHours().toString().padStart(2, '0');
     const toMinutes = toDate.getMinutes().toString().padStart(2, '0');
     return `${fromHours}:${fromMinutes}~${toHours}:${toMinutes}`;
-};
-
-export const getStatusStyle = (statusId: number) => {
-    switch (statusId) {
-        case 1: // 1차 승인 대기
-            return css`background-color: #FFFCF2; color: #FFBB00;`;
-        case 2: // 2차 승인 대기
-            return css`background-color: #FFF8F2; color: #FF7300;`;
-        case 3: // 최종 승인 완료
-            return css`background-color: #F2FBF8; color: #34C759;`;
-        case 4: // 반려
-            return css`background-color: #FCF2FF; color: #C800FF;`;
-        case 5: // 예약 취소
-            return css`background-color: #F3F4F4; color: #8E8E93;`;
-        case 6: // 이용 완료
-            return css`background-color: #F0F1F5; color: #8496C5;`;
-        default:
-            return css`background-color: #f5f5f5; color: #757575;`;
-    }
 };

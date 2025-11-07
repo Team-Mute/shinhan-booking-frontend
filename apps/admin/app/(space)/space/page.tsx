@@ -11,6 +11,7 @@ import colors from "@styles/theme";
 import Loader from "@admin/components/Loader";
 import { GapBox } from "@admin/components/GapBox";
 import { SEARCH_OPTIONS } from "@admin/lib/constants/space";
+import Pagination from "@components/ui/pagination/Pagination";
 
 /**
  * SpacePage 컴포넌트
@@ -67,6 +68,7 @@ export default function SpacePage() {
             searchValue={keyword}
             onSearchChange={setKeyword}
             onSearch={handleSearch}
+            isDropdownVisible={true}
           />
         </SearchBarWrapper>
 
@@ -86,38 +88,16 @@ export default function SpacePage() {
           ))}
         </CardContainer>
 
-        {/* 페이지네이션 */}
-        {pagination.totalPages > 0 && (
-          <PaginationWrapper>
-            {pagination.totalPages > 1 && (
-              <PageButton disabled={startPage === 1} onClick={handlePrevGroup}>
-                <img src="/icons/prev.svg" alt="이전" width={20} height={20} />
-              </PageButton>
-            )}
-
-            {Array.from(
-              { length: endPage - startPage + 1 },
-              (_, i) => startPage + i
-            ).map((page) => (
-              <PageNumber
-                key={page}
-                active={page === pagination.currentPage}
-                onClick={() => handlePageChange(page)}
-              >
-                {page}
-              </PageNumber>
-            ))}
-
-            {pagination.totalPages > 1 && (
-              <PageButton
-                disabled={endPage >= pagination.totalPages}
-                onClick={handleNextGroup}
-              >
-                <img src="/icons/next.svg" alt="다음" width={20} height={20} />
-              </PageButton>
-            )}
-          </PaginationWrapper>
-        )}
+       {/* 페이지네이션 */}
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          startPage={startPage}
+          endPage={endPage}
+          onPageChange={handlePageChange}
+          onPrevGroup={handlePrevGroup}
+          onNextGroup={handleNextGroup}
+        />
 
         {/* 단일 모달 컴포넌트 */}
         {modalState.mode && (
