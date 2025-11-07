@@ -92,9 +92,20 @@ export async function updateSpaceApi(
 }
 
 // 공간 삭제 API
+/**
+ * 1차 공간 삭제 요청
+ * confirmDelete=false
+ * - 해당 공간에 진행 중인 예약이 있는 경우: 삭제 불가 처리
+ * - 해당 공간에 과거 예약만 있는 경우: 경고 메시지 띄운 후 최종 삭제 진행
+ *
+ * 최종 공간 삭제 요청
+ * confirmDelete=true
+ * - 공간 정보와 예약 정보 모두 삭제됨
+ *
+ */
 export async function deleteSpaceApi(paramsData: SpaceDeleteParams) {
   const { data } = await adminAxiosClient.delete(
-    `/api/spaces-admin/${paramsData.spaceId}`
+    `/api/spaces-admin/${paramsData.spaceId}?confirmDelete=${paramsData.confirmDelete}`
   );
   return data;
 }
