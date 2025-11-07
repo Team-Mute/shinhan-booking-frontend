@@ -2,11 +2,13 @@
 
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { FOOTER_FREE_PAGES } from "@user/lib/constants/routes";
 import UserProvider from "./UserProvider";
 import InfoModal from "@user/components/InfoModal";
-import { FOOTER_FREE_PAGES } from "@user/lib/constants/routes";
 import FooterDesktop from "@user/components/FooterDesktop";
 import FooterMobile from "@user/components/FooterMobile";
+import HeaderDesktop from "@user/components/HeaderDesktop";
+import HeaderMobile from "@user/components/HeaderMobile";
 /**
  * LayoutManager 컴포넌트
  * -----------------------
@@ -26,6 +28,8 @@ export default function LayoutManager({ children }: Props) {
   return (
     <UserProvider>
       <InfoModal /> {/* 전역 알림 모달 */}
+      <HeaderDesktop />
+      <HeaderMobile />
       <main>{children}</main> {/* 실제 페이지 콘텐츠 */}
       {/* 푸터 조건부 렌더링 */}
       {isFooterFreePage ? (
