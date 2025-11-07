@@ -6,6 +6,7 @@ import AdminSidebar from "./AdminSidebar";
 import AdminProvider from "./AdminProvider";
 import InfoModal from "@admin/components/modal/InfoModal";
 import { SIDEBAR_FREE_PAGES } from "@admin/lib/constants/routes";
+import ConfirmModal from "@admin/components/modal/ConfirmModal";
 
 /**
  * LayoutManager 컴포넌트
@@ -30,6 +31,7 @@ export default function LayoutManager({ children }: Props) {
   return (
     <AdminProvider>
       <InfoModal />
+      <ConfirmModal />
       {isSidebarFreePage ? (
         <main>{children}</main>
       ) : (

@@ -16,6 +16,7 @@ import {
 } from "@admin/types/dto/space.dto";
 import { SEARCH_OPTIONS } from "@admin/lib/constants/space";
 import { useModalStore } from "@admin/store/modalStore";
+import { useConfirmModalStore } from "@admin/store/confirmModalStore";
 
 /**
  * 공간 관리 페이지의 상태와 핸들러를 관리하는 커스텀 훅
@@ -23,6 +24,7 @@ import { useModalStore } from "@admin/store/modalStore";
 export function useSpace() {
   /* 모달 스토어*/
   const { open } = useModalStore();
+  const { open: openConfirmModal } = useConfirmModalStore();
 
   /** 공간 리스트 */
   const [spaceList, setSpaceList] = useState<SpaceListItem[]>([]);
@@ -212,28 +214,52 @@ export function useSpace() {
   };
 
   const handleDeleteSpace = async (spaceId: number) => {
-    open(
+    openConfirmModal(
       "경고",
-      "공간을 삭제하면 관련된 예약 데이터가 모두 사라집니다.\n정말 삭제하시겠습니까?",
+      "공간을 삭제하면 관련된\n예약 데이터가 모두 사라집니다.\n정말 삭제하시겠습니까?",
       async () => {
-        // 1차 공간 삭제 요청
-        const result = await deleteSpaceApi({
-          spaceId: spaceId,
-          confirmDelete: false,
-        });
-        console.log("1차 공간 삭제 요청 결과:", result);
+        try {
+          // 1차 공간 삭제 요청
+          const result = await deleteSpaceApi({
+            spaceId: spaceId,
+            confirmDelete: false,
+          });
 
-        // 공간에 대한 예약 데이터가 없는 경우, 바로 삭제 진행
-
-        // 진행 중인 예약이 있는 경우,
-        // - [1차 승인대기/2차 승인대기/ 최종 승인 완료]의 예약건이 있을 경우 삭제 불가 처리
-        // - 422 (Unprocessable Entity - 비즈니스 규칙 위반)
-
-        // 해당 공간에 과거 예약만 있는 경우
-        // - [반려/이용 완료/ 취소]의 예약건만 있을 경우 경고 메시지 띄운 후 최종 삭제 진행
-        // - 409 (Conflict - 리소스 충돌 및 재요청 유도)
-        await reloadSpaces();
-      }
+          // API 호출 성공 후 로직 (예: 목록 새로고침)
+          // 공간에 대한 예약 데이터가 없는 경우, 바로 삭제 진행
+          await reloadSpaces();
+        } catch (err: any) {
+          // 에러 처리: 422 또는 409 응답 처리
+          if (err.response?.status === 422) {
+            // 진행 중인 예약이 있는 경우,
+            // - [1차 승인대기/2차 승인대기/ 최종 승인 완료]의 예약건이 있을 경우 삭제 불가 처리
+            // - 422 (Unprocessable Entity - 비즈니스 규칙 위반)
+            open(
+              "삭제 불가",
+              "진행 중인 예약이 있어\n공간을 삭제할 수 없습니다."
+            );
+          }
+          // 해당 공간에 과거 예약만 있는 경우
+          // - [반려/이용 완료/ 취소]의 예약건만 있을 경우 경고 메시지 띄운 후 최종 삭제 진행
+          // - 409 (Conflict - 리소스 충돌 및 재요청 유도)
+          else if (err.response?.status === 409) {
+            openConfirmModal(
+              "경고",
+              "과거 예약건이 있습니다.\n그래도 삭제하시겠습니까?",
+              async () => {
+                await deleteSpaceApi({
+                  spaceId: spaceId,
+                  confirmDelete: true,
+                });
+                fetchSpaces();
+              },
+              () => {}
+            );
+          }
+        }
+      },
+      // onCancel: '취소' 버튼 클릭 시 실행될 로직
+      () => {}
     );
   };
 
