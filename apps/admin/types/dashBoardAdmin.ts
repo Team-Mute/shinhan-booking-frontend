@@ -33,14 +33,16 @@ export type ReservationStatus =
   | "최종 승인 완료"
   | "이용 완료"
   | "긴급"
-  | "신한";
+  | "신한"
+  | "예약 취소"
+  | "반려";
 
 /**
  * API 응답 데이터를 가공하여 캘린더에 표시하기 위한 타입입니다.
  */
 export interface ProcessedReservation {
   id: number;
-  date: string; // 예약 날짜 (YYYY-MM-DD)
+  dates: string[]; // 예약 날짜 배열 (YYYY-MM-DD) - 여러 날짜에 걸친 예약 지원
   time: string; // 예약 시간 (HH:mm ~ HH:mm)
   user: string; // 예약자 이름
   status: ReservationStatus; // 예약 상태 (가공된 값)
