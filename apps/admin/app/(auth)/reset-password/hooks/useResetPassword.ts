@@ -1,6 +1,6 @@
 import { resetAdminPasswordApi } from "@admin/lib/api/admin";
 import { useModalStore } from "@admin/store/modalStore";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 /**

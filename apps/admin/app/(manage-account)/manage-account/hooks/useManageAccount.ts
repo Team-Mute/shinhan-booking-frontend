@@ -1,6 +1,6 @@
 import { getAccountApi } from "@admin/lib/api/admin";
 import { AccountResponse } from "@admin/types/dto/admin.dto";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 /**
