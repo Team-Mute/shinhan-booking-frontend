@@ -22,7 +22,8 @@
     "paths": {
       "@components/*": ["packages/components/*"],
       "@styles/*": ["packages/styles/*"],
-      "@admin/*": ["apps/admin/*"]
+      "@admin/*": ["apps/admin/*"],
+      "@user/*": ["apps/user/*"]
     }
   },
   "include": [

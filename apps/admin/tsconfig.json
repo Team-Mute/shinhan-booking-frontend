@@ -25,7 +25,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "../../packages/**/*"
+    "../../packages/**/*",
+    "../user/components/ModalButton.tsx"
   ],
   "exclude": ["node_modules"]
 }

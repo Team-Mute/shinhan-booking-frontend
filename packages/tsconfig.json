@@ -6,6 +6,11 @@
     "declarationMap": true,
     "outDir": "dist"
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts"
+    // "../apps/user/components/ModalButton.tsx"
+  ],
   "exclude": []
 }

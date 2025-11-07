@@ -1,12 +1,4 @@
-// import type { NextConfig } from "next";
-
-// const nextConfig: NextConfig = {
-//   compiler: {
-//     emotion: true,
-//   },
-// };
-
-// export default nextConfig;
+const path = require("path");
 
 const nextConfig = {
   compiler: {
