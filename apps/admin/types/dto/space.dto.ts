@@ -87,7 +87,9 @@ export type SpaceUpdateBody = SpaceCreateBody & {
 };
 
 /** 공간 삭제 요청 DTO */
-export type SpaceDeleteParams = Pick<SpaceDetailResponse, "spaceId">;
+export type SpaceDeleteParams = Pick<SpaceDetailResponse, "spaceId"> & {
+  confirmDelete: boolean;
+};
 
 // 지역 타입
 export type Region = {
