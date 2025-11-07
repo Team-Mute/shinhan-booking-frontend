@@ -10,14 +10,14 @@
  */
 
 import { useAuthStore } from "@user/store/authStore";
-import { SignUpData } from "@user/store/authStore";
+import { SignUpData } from "@user/types/user.dto";
 import { getDeviceInfo } from "@user/utils/device";
 import { getClientIp } from "@user/utils/ip";
 import axiosClient from "@user/lib/api/axiosClient";
 
 /**
  * @description 회원가입 API
- * @param {SignUpData} data - 사용자 이름, 이메일, 비밀번호, 회사명, 이메일 동의 여부
+ * @param {SignUpData} data - 사용자 이름, 이메일, 비밀번호, 회사명
  * @returns {Promise<any>} API 응답
  */
 export async function signUpApi({
@@ -25,14 +25,12 @@ export async function signUpApi({
   userEmail,
   userPwd,
   companyName,
-  agreeEmail,
 }: SignUpData) {
   const response = await axiosClient.post("/api/users/signup", {
     userName,
     userEmail,
     userPwd,
     companyName,
-    agreeEmail,
   });
   return response;
 }
