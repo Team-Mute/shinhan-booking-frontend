@@ -15,11 +15,15 @@ import {
   SpaceUpdateBody,
 } from "@admin/types/dto/space.dto";
 import { SEARCH_OPTIONS } from "@admin/lib/constants/space";
+import { useModalStore } from "@admin/store/modalStore";
 
 /**
  * 공간 관리 페이지의 상태와 핸들러를 관리하는 커스텀 훅
  */
 export function useSpace() {
+  /* 모달 스토어*/
+  const { open } = useModalStore();
+
   /** 공간 리스트 */
   const [spaceList, setSpaceList] = useState<SpaceListItem[]>([]);
 
@@ -65,7 +69,6 @@ export function useSpace() {
           pageSize: data.pageSize,
           totalElements: data.totalElements,
         });
-        console.log("useSpace getRegionSpace log:", data);
       } catch (err) {
         console.error("지역별 공간 불러오기 실패:", err);
       }
@@ -209,8 +212,29 @@ export function useSpace() {
   };
 
   const handleDeleteSpace = async (spaceId: number) => {
-    await deleteSpaceApi({ spaceId });
-    await reloadSpaces();
+    open(
+      "경고",
+      "공간을 삭제하면 관련된 예약 데이터가 모두 사라집니다.\n정말 삭제하시겠습니까?",
+      async () => {
+        // 1차 공간 삭제 요청
+        const result = await deleteSpaceApi({
+          spaceId: spaceId,
+          confirmDelete: false,
+        });
+        console.log("1차 공간 삭제 요청 결과:", result);
+
+        // 공간에 대한 예약 데이터가 없는 경우, 바로 삭제 진행
+
+        // 진행 중인 예약이 있는 경우,
+        // - [1차 승인대기/2차 승인대기/ 최종 승인 완료]의 예약건이 있을 경우 삭제 불가 처리
+        // - 422 (Unprocessable Entity - 비즈니스 규칙 위반)
+
+        // 해당 공간에 과거 예약만 있는 경우
+        // - [반려/이용 완료/ 취소]의 예약건만 있을 경우 경고 메시지 띄운 후 최종 삭제 진행
+        // - 409 (Conflict - 리소스 충돌 및 재요청 유도)
+        await reloadSpaces();
+      }
+    );
   };
 
   return {
