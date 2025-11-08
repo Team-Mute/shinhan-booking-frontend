@@ -81,8 +81,6 @@ const SpaceFormModal: React.FC<SpaceFormModalProps> = ({
         initialImageUrls.push(...initialData.detailImageUrls); // 나머지 이미지 (string)
       }
 
-      console.log("initial image: ", initialImageUrls);
-
       resetForm({
         space: mapped,
         images: [],
