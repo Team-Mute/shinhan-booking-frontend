@@ -1,6 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
 import { RawReservationData } from '@admin/types/dashBoardAdmin';
+import { getStatusBgColor, getStatusColor, STATUS_COLORS_BY_NAME } from '@styles/statusStyles';
 
 interface DayDetailModalProps {
   isOpen: boolean;
@@ -47,28 +48,6 @@ export default function DayDetailModal({
     const day = d.getDate();
     const weekDay = getWeekDay(dateStr);
     return `${year}년,${month}월 ${day}일 (${weekDay})`;
-  };
-
-  // 상태별 배경색 반환
-  const getStatusBgColor = (status: string) => {
-    if (status === "1차 승인 대기") return "#FFF7E8";
-    if (status === "2차 승인 대기") return "#FFF2E8";
-    if (status === "최종 승인 완료") return "#F0FFF4";
-    if (status === "이용 완료") return "#F3F4F4";
-    if (status === "예약취소") return "#F3F4F4";
-    if (status === "반려") return "#FFF0F6";
-    return "#F3F4F4";
-  };
-
-  // 상태별 텍스트 색상 반환
-  const getStatusColor = (status: string) => {
-    if (status === "1차 승인 대기") return "#FDB01F";
-    if (status === "2차 승인 대기") return "#FF7300";
-    if (status === "최종 승인 완료") return "#34C759";
-    if (status === "이용 완료") return "#8496C5";
-    if (status === "예약취소") return "#8E8E93";
-    if (status === "반려") return "#C800FF";
-    return "#8C8F93";
   };
 
   const handleConfirm = () => {
@@ -323,13 +302,14 @@ const statusBadgeStyle = (status: string) => css`
   white-space: nowrap;
 `;
 
+// statusStyles.ts의 STATUS_COLORS_BY_NAME 활용
 const shinhanBadgeStyle = css`
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   padding: 4px 8px;
-  background: #f2f6ff;
+  background: ${STATUS_COLORS_BY_NAME['신한'].bg};
   border-radius: 4px;
   font-family: 'Pretendard', sans-serif;
   font-style: normal;
@@ -338,7 +318,7 @@ const shinhanBadgeStyle = css`
   line-height: 13px;
   text-align: center;
   letter-spacing: -0.011em;
-  color: #0046ff;
+  color: ${STATUS_COLORS_BY_NAME['신한'].text};
 `;
 
 const emergencyBadgeStyle = css`
@@ -347,7 +327,7 @@ const emergencyBadgeStyle = css`
   justify-content: center;
   align-items: center;
   padding: 4px 8px;
-  background: #fff2f2;
+  background: ${STATUS_COLORS_BY_NAME['긴급'].bg};
   border-radius: 4px;
   font-family: 'Pretendard', sans-serif;
   font-style: normal;
@@ -356,7 +336,7 @@ const emergencyBadgeStyle = css`
   line-height: 13px;
   text-align: center;
   letter-spacing: -0.011em;
-  color: #ff0000;
+  color: ${STATUS_COLORS_BY_NAME['긴급'].text};
 `;
 
 const userNameStyle = css`
@@ -494,24 +474,3 @@ const confirmButtonStyle = css`
     background: #002d99;
   }
 `;
-
-// 헬퍼 함수들
-function getStatusBgColor(status: string): string {
-  if (status === "1차 승인 대기") return "#FFF7E8";
-  if (status === "2차 승인 대기") return "#FFF2E8";
-  if (status === "최종 승인 완료") return "#F0FFF4";
-  if (status === "이용 완료") return "#F3F4F4";
-  if (status === "예약취소") return "#F3F4F4";
-  if (status === "반려") return "#FFF0F6";
-  return "#F3F4F4";
-}
-
-function getStatusColor(status: string): string {
-  if (status === "1차 승인 대기") return "#FDB01F";
-  if (status === "2차 승인 대기") return "#FF7300";
-  if (status === "최종 승인 완료") return "#34C759";
-  if (status === "이용 완료") return "#8496C5";
-  if (status === "예약취소") return "#8E8E93";
-  if (status === "반려") return "#C800FF";
-  return "#8C8F93";
-}
