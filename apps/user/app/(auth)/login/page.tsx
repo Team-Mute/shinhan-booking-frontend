@@ -102,7 +102,8 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 80px;
+  justify-content: center;
+  height: 100vh;
 `;
 
 const GreetingText = styled.h2`
