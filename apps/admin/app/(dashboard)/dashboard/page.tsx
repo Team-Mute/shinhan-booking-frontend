@@ -3,23 +3,26 @@
 import React, { useState, useEffect } from "react";
 import styled from "@emotion/styled";
 import { useRouter } from "next/navigation";
-import { DashBoardCard, ReservationStatus, ProcessedReservation } from "@admin/types/dashBoardAdmin";
+import { DashBoardCard, ReservationStatus, ProcessedReservation, StatusFilter } from "@admin/types/dashBoardAdmin";
 import {
   getDashboardCardApi,
   getDashboardReservationsApi,
+  getDashboardFiltersApi,
 } from "@admin/lib/api/adminDashboard";
 import CalendarSettingModal from "../dashboard/components/CalendarSettingModal";
 import CalendarHeader from "../dashboard/components/CalendarHeader";
 import CalendarGrid from "../dashboard/components/CalendarGrid";
 import { useLocalStorage } from "../dashboard/hooks/useCalendarSetting";
 import {
-  STATUS_COLORS,
-  STATUS_ID_TO_API_ID,
+  STATUS_KEY_TO_API_ID,
   STATUS_LABEL_TO_KEY,
   STORAGE_KEYS,
   DEFAULT_VISIBLE_STATUSES,
+  StatusOption,
+  API_ID_TO_STATUS_KEY,
 } from "@admin/lib/constants/dashboard";
 import { processApiData } from "@admin/lib/utils/dashboardUtils";
+import { STATUS_COLORS_BY_NAME, DOT_COLORS } from "@styles/statusStyles";
 
 /**
  * 대시보드 메인 페이지
@@ -36,6 +39,10 @@ export default function Dashboard() {
   const [reservations, setReservations] = useState<ProcessedReservation[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
+  // 동적으로 로드된 상태 옵션
+  const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
+  const [isStatusLoaded, setIsStatusLoaded] = useState(false);
+  
   // localStorage를 통한 캘린더 설정 저장
   const [visibleStatuses, setVisibleStatuses] = useLocalStorage<string[]>(
     STORAGE_KEYS.VISIBLE_STATUSES,
@@ -43,18 +50,62 @@ export default function Dashboard() {
   );
 
   /**
+   * API 응답을 StatusOption으로 변환하는 함수
+   */
+  const convertApiFiltersToStatusOptions = (apiFilters: StatusFilter[]): StatusOption[] => {
+    return apiFilters
+      .filter(filter => filter.type === 'STATUS')
+      .map(filter => {
+        const statusKey = API_ID_TO_STATUS_KEY[filter.id];
+        const color = DOT_COLORS[filter.description as keyof typeof DOT_COLORS] || '#8C8F93';
+        
+        return {
+          id: statusKey,
+          label: filter.description,
+          color: color,
+          apiId: filter.id,
+        };
+      });
+  };
+
+  /**
+   * 예약 상태 필터 옵션 로드 (DB 기반)
+   */
+  useEffect(() => {
+    const loadStatusOptions = async () => {
+      try {
+        const apiFilters = await getDashboardFiltersApi();
+        const options = convertApiFiltersToStatusOptions(apiFilters);
+        
+        setStatusOptions(options);
+        setIsStatusLoaded(true);
+        
+        console.log("예약 상태 필터 로드 완료:", options);
+      } catch (err) {
+        console.error("예약 상태 필터 로드 실패:", err);
+        setStatusOptions([]);
+        setIsStatusLoaded(true);
+      }
+    };
+
+    loadStatusOptions();
+  }, []);
+
+  /**
    * 예약 목록 로드
    * - 현재 월과 표시 상태에 따라 필터링
    */
   useEffect(() => {
+    if (!isStatusLoaded) return;
+
     const loadReservations = async () => {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
 
-      // 선택된 상태 ID를 API ID로 변환
-      const statusIds = visibleStatuses.map(
-        (statusId) => STATUS_ID_TO_API_ID[statusId]
-      );
+      // 선택된 상태 키를 API ID로 변환
+      const statusIds = visibleStatuses
+        .map((statusKey) => STATUS_KEY_TO_API_ID[statusKey])
+        .filter(id => id !== undefined);
 
       try {
         const rawData = await getDashboardReservationsApi(year, month, statusIds);
@@ -67,7 +118,7 @@ export default function Dashboard() {
     };
 
     loadReservations();
-  }, [currentDate, visibleStatuses]);
+  }, [currentDate, visibleStatuses, isStatusLoaded]);
 
   /**
    * 대시보드 카드 데이터 로드
@@ -91,16 +142,14 @@ export default function Dashboard() {
    * - 해당 상태로 필터링된 예약관리 페이지로 이동
    */
   const handleStatusCardClick = (status: ReservationStatus) => {
-    // "긴급"과 "신한"은 플래그 필터
     if (status === "긴급") {
       router.push(`/reservation?isEmergency=true`);
     } else if (status === "신한") {
       router.push(`/reservation?isShinhan=true`);
     } else {
-      // 일반 상태는 statusId로 필터
       const statusKey = STATUS_LABEL_TO_KEY[status as keyof typeof STATUS_LABEL_TO_KEY];
       if (statusKey) {
-        const statusId = STATUS_ID_TO_API_ID[statusKey];
+        const statusId = STATUS_KEY_TO_API_ID[statusKey];
         router.push(`/reservation?statusId=${statusId}`);
       }
     }
@@ -114,6 +163,17 @@ export default function Dashboard() {
     setVisibleStatuses(selectedStatuses);
     console.log("캘린더 설정 저장:", selectedStatuses);
   };
+
+  // 상태가 로드되지 않았으면 로딩 표시
+  if (!isStatusLoaded) {
+    return (
+      <DashboardContainer>
+        <LoadingContainer>
+          <LoadingText>대시보드를 불러오는 중...</LoadingText>
+        </LoadingContainer>
+      </DashboardContainer>
+    );
+  }
 
   return (
     <DashboardContainer>
@@ -141,6 +201,7 @@ export default function Dashboard() {
           setDate={setCurrentDate}
           onSettingsClick={() => setIsModalOpen(true)}
           visibleStatuses={visibleStatuses}
+          statusOptions={statusOptions}
         />
         <CalendarGrid
           date={currentDate}
@@ -155,6 +216,7 @@ export default function Dashboard() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveSettings}
         initialSelectedStatuses={visibleStatuses}
+        statusOptions={statusOptions}
       />
     </DashboardContainer>
   );
@@ -167,12 +229,27 @@ const DashboardContainer = styled.div`
   flex-direction: column;
   gap: 24px;
   font-family: "Pretendard", sans-serif;
+  min-height: 100vh;
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+`;
+
+const LoadingText = styled.div`
+  font-size: 16px;
+  color: #8c8f93;
+  font-weight: 500;
 `;
 
 const Title = styled.h1`
   font-size: 24px;
   font-weight: 600;
   color: #000000;
+  margin: 0;
 `;
 
 const SummaryContainer = styled.div`
@@ -209,14 +286,8 @@ const Badge = styled.div<{ status: ReservationStatus }>`
   font-size: 11px;
   font-weight: 600;
   width: fit-content;
-  background-color: ${({ status }) => {
-    if (status === "1차 승인 대기") return "#FFFCF2";
-    if (status === "2차 승인 대기") return "#FFF8F2";
-    if (status === "긴급") return "#FFF2F2";
-    if (status === "신한") return "#F2F6FF";
-    return "#F3F4F4";
-  }};
-  color: ${({ status }) => STATUS_COLORS[status]};
+  background-color: ${({ status }) => STATUS_COLORS_BY_NAME[status]?.bg || '#F3F4F4'};
+  color: ${({ status }) => STATUS_COLORS_BY_NAME[status]?.text || '#8C8F93'};
 `;
 
 const Count = styled.p`

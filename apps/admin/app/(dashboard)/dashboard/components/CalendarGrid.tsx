@@ -3,7 +3,8 @@ import styled from "@emotion/styled";
 import { ProcessedReservation, RawReservationData } from "@admin/types/dashBoardAdmin";
 import { getDashboardReservationsByDateApi } from "@admin/lib/api/adminDashboard";
 import DayDetailModal from "../components/DayDetailModal";
-import { STATUS_COLORS, STATUS_ID_TO_LABEL, STATUS_ID_TO_API_ID } from "@admin/lib/constants/dashboard";
+import { STATUS_ID_TO_LABEL, STATUS_KEY_TO_API_ID } from "@admin/lib/constants/dashboard";
+import { getDotColor } from "@styles/statusStyles";
 
 interface CalendarGridProps {
   date: Date;
@@ -69,9 +70,9 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
    */
   const handleDayClick = async (dateStr: string) => {
     try {
-      // 현재 표시중인 상태 ID를 API ID로 변환
+      // 현재 표시중인 상태 키를 API ID로 변환
       const statusIds = visibleStatuses.map(
-        (statusId) => STATUS_ID_TO_API_ID[statusId]
+        (statusKey) => STATUS_KEY_TO_API_ID[statusKey]
       );
 
       // API 호출 시 날짜와 상태 ID 전달
@@ -147,7 +148,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                         isCompleted={isCompleted}
                         isCancelled={isCancelled}
                       >
-                        <Dot color={STATUS_COLORS[res.status]} />
+                        <Dot color={getDotColor(res.status)} />
                         <span>{res.time}</span>
                         <span>{res.user}</span>
                       </ReservationItem>

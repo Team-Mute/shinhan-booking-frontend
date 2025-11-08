@@ -1,34 +1,22 @@
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
 import { useState, useEffect } from 'react';
+import { StatusOption } from '@admin/lib/constants/dashboard';
 
 interface CalendarSettingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (selectedStatuses: string[]) => void;
   initialSelectedStatuses: string[];
+  statusOptions: StatusOption[];
 }
-
-interface StatusOption {
-  id: string;
-  label: string;
-  color: string;
-}
-
-export const statusOptions: StatusOption[] = [
-  { id: 'FIRST_APPROVAL_PENDING', label: '1차 승인 대기', color: '#FFBB00' },
-  { id: 'SECOND_APPROVAL_PENDING', label: '2차 승인 대기', color: '#FF7300' },
-  { id: 'FINAL_APPROVED', label: '최종 승인 완료', color: '#34C759' },
-  { id: 'COMPLETED', label: '이용 완료', color: '#8496C5' },
-  { id: 'CANCELLED', label: '예약 취소', color: '#8E8E93' },
-  { id: 'REJECTED', label: '반려', color: '#C800FF' },
-];
 
 export default function CalendarSettingModal({
   isOpen,
   onClose,
   onSave,
   initialSelectedStatuses,
+  statusOptions,
 }: CalendarSettingModalProps) {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(initialSelectedStatuses);
 
@@ -39,14 +27,26 @@ export default function CalendarSettingModal({
   }, [isOpen, initialSelectedStatuses]);
 
   const toggleStatus = (statusId: string) => {
-    setSelectedStatuses((prev) =>
-      prev.includes(statusId)
-        ? prev.filter((id) => id !== statusId)
-        : [...prev, statusId]
-    );
+    setSelectedStatuses((prev) => {
+      // 이미 선택된 상태를 해제하려는 경우
+      if (prev.includes(statusId)) {
+        // 마지막 남은 항목이면 해제 불가
+        if (prev.length === 1) {
+          return prev; // 변경하지 않음
+        }
+        return prev.filter((id) => id !== statusId);
+      }
+      // 새로운 상태 추가
+      return [...prev, statusId];
+    });
   };
 
   const handleSave = () => {
+    // 최소 1개 선택 확인
+    if (selectedStatuses.length === 0) {
+      alert('최소 1개 이상의 상태를 선택해 주세요.');
+      return;
+    }
     onSave(selectedStatuses);
     onClose();
   };
@@ -86,40 +86,51 @@ export default function CalendarSettingModal({
         </div>
 
         <div css={contentStyle}>
+          <div css={descriptionStyle}>
+            최소 1개 이상의 상태를 선택해 주세요.
+          </div>
           <div css={optionsContainerStyle}>
-            {statusOptions.map((option) => (
-              <div
-                key={option.id}
-                css={optionRowStyle}
-                onClick={() => toggleStatus(option.id)}
-              >
+            {statusOptions.map((option) => {
+              const isSelected = selectedStatuses.includes(option.id);
+              const isLastSelected = isSelected && selectedStatuses.length === 1;
+              
+              return (
                 <div
-                  css={checkboxStyle(
-                    option.color,
-                    selectedStatuses.includes(option.id)
-                  )}
+                  key={option.id}
+                  css={optionRowStyle(isLastSelected)}
+                  onClick={() => !isLastSelected && toggleStatus(option.id)}
                 >
-                  {selectedStatuses.includes(option.id) && (
-                    <svg
-                      width="8"
-                      height="6"
-                      viewBox="0 0 8 6"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M1 3L3 5L7 1"
-                        stroke="#FFFFFF"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                  <div
+                    css={checkboxStyle(
+                      option.color,
+                      isSelected
+                    )}
+                  >
+                    {isSelected && (
+                      <svg
+                        width="8"
+                        height="6"
+                        viewBox="0 0 8 6"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M1 3L3 5L7 1"
+                          stroke="#FFFFFF"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <span css={labelStyle(isLastSelected)}>{option.label}</span>
+                  {isLastSelected && (
+                    <span css={requiredBadgeStyle}>필수</span>
                   )}
                 </div>
-                <span css={labelStyle}>{option.label}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -164,7 +175,7 @@ const modalHeaderStyle = css`
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  padding: 24px 20px;
+  padding: 24px 20px 16px 20px; // 하단 padding 줄임 (24px → 16px)
   gap: 7px;
   background: #ffffff;
   border-radius: 12px 12px 0px 0px;
@@ -211,7 +222,7 @@ const contentStyle = css`
   max-height: 559px;
   overflow-y: auto;
   background: #ffffff;
-  padding: 24px 58px;
+  padding: 8px 58px 24px 58px; // 상단 padding 줄임 (24px → 8px)
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -227,6 +238,15 @@ const contentStyle = css`
   }
 `;
 
+const descriptionStyle = css`
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  color: #8c8f93;
+  margin-bottom: 20px;
+  text-align: left; // 왼쪽 정렬
+  padding-left: 0; // 왼쪽 여백 제거
+`;
+
 const optionsContainerStyle = css`
   display: flex;
   flex-direction: column;
@@ -235,16 +255,17 @@ const optionsContainerStyle = css`
   max-width: 353px;
 `;
 
-const optionRowStyle = css`
+const optionRowStyle = (isDisabled: boolean) => css`
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
+  cursor: ${isDisabled ? 'not-allowed' : 'pointer'};
   user-select: none;
+  opacity: ${isDisabled ? 0.6 : 1};
 
   &:hover {
-    opacity: 0.8;
+    opacity: ${isDisabled ? 0.6 : 0.8};
   }
 `;
 
@@ -264,14 +285,24 @@ const checkboxStyle = (
   box-sizing: border-box;
 `;
 
-const labelStyle = css`
+const labelStyle = (isDisabled: boolean) => css`
   font-family: 'Pretendard', sans-serif;
   font-style: normal;
   font-weight: 500;
   font-size: 16px;
   line-height: 18px;
   text-align: center;
-  color: #191f28;
+  color: ${isDisabled ? '#8c8f93' : '#191f28'};
+`;
+
+const requiredBadgeStyle = css`
+  margin-left: auto;
+  padding: 2px 8px;
+  background: #FFF2F2;
+  color: #FF0000;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
 `;
 
 const footerStyle = css`
