@@ -20,15 +20,23 @@ interface Props {
   setInitialImageUrls: (urls: string[]) => void;
 }
 
+/**
+ * SpaceSettingsForm 컴포넌트
+ * ----------------------------
+ * 공간 등록/수정 폼의 기본 정보 설정(이미지, 이름, 지점, 카테고리, 태그 등) 섹션
+ *
+ * - 대부분의 비즈니스 로직과 상태는 useSpaceSettings 훅(vm)에 위임됨
+ * - 이미지 업로드, 미리보기, 드래그&드롭 재정렬 기능을 담당
+ * - 폼 필드와 ViewModel 핸들러 연결
+ */
 const SpaceSettingsForm: React.FC<Props> = ({
   form,
   setForm,
   onValidationChange,
-  // ✅ props 구조 분해 할당
   initialImageUrls,
   setInitialImageUrls,
 }) => {
-  // 1. ViewModel 사용: 모든 상태와 로직을 가져옴
+  // ViewModel 사용: useSpaceSettings 훅을 호출하여 모든 상태와 핸들러(vm)를 가져옴
   const vm = useSpaceSettings({
     form,
     setForm,
@@ -36,16 +44,16 @@ const SpaceSettingsForm: React.FC<Props> = ({
     setInitialImageUrls,
   });
 
-  // 2. View-specific 상태: Drag & Drop UI 피드백에 관련된 상태는 View에 남겨둠
+  // View-specific 상태: Drag & Drop UI 피드백을 위한 상태 (ViewModel에 포함시키지 않음)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // 3. Effect: ViewModel의 유효성 결과 변경 시 부모 컴포넌트에 전달
+  // Effect: ViewModel의 폼 유효성(vm.isSettingsValid)이 변경될 때마다 부모 컴포넌트에 전달
   useEffect(() => {
     onValidationChange(vm.isSettingsValid);
   }, [vm.isSettingsValid, onValidationChange]);
 
-  // 현재 뷰에서 사용할 이미지 배열은 vm.files입니다. (string | File)[]
+  // 현재 뷰에서 렌더링할 이미지 배열 (File 객체 또는 URL)
   const currentImages = vm.files;
 
   return (
@@ -60,48 +68,34 @@ const SpaceSettingsForm: React.FC<Props> = ({
         {[...Array(5)].map((_, i) => (
           <ImageUpload
             key={i}
-            onClick={vm.openPicker}
-            draggable={!!vm.files[i]}
-            onDragStart={() => setDraggedIndex(i)}
+            onClick={vm.openPicker} // 클릭 시 파일 선택기 열기
+            draggable={!!vm.files[i]} // 이미지가 있을 때만 드래그 가능
+            onDragStart={() => setDraggedIndex(i)} // 드래그 시작 시 인덱스 저장
             onDragEnd={() => {
               setDraggedIndex(null);
               setDragOverIndex(null);
-            }}
+            }} // 드래그 종료 시 상태 초기화
             onDragOver={(e) => {
               e.preventDefault();
               setDragOverIndex(vm.files[i] ? i : null);
-            }}
-            onDragLeave={() => setDragOverIndex(null)}
+            }} // 드래그 오버 시 인덱스 저장 (드롭 가능 영역)
+            onDragLeave={() => setDragOverIndex(null)} // 드래그 영역 벗어남
             onDrop={() => {
               if (draggedIndex === null || !currentImages[i]) return;
 
-              // 1. 순서 변경
-              // const reordered = reorder(currentImages, draggedIndex, i);
-
-              // // 2. ✅ [추가] 순서 변경된 배열을 URL(string)과 File 객체로 분리
-              // const newUrls = reordered.filter((item) => typeof item === 'string') as string[];
-              // const newFiles = reordered.filter((item) => item instanceof File) as File[];
-
-              // 3. ✅ [추가] 분리된 배열을 setForm과 setInitialImageUrls로 각각 업데이트
-              vm.handleReorder(draggedIndex, i); // ViewModel에 추가할 함수 호출
+              vm.handleReorder(draggedIndex, i); // 이미지 순서 재정렬 로직 호출 (ViewModel)
 
               setDraggedIndex(null);
               setDragOverIndex(null);
             }}
-            // onDrop={() => {
-            //   if (draggedIndex === null || !vm.files[i]) return;
-            //   const reordered = reorder(vm.files, draggedIndex, i);
-            //   vm.setFiles(reordered); // ViewModel의 setFiles를 사용하여 상태 업데이트
-            //   setDraggedIndex(null);
-            //   setDragOverIndex(null);
-            // }}
             isDragging={draggedIndex === i}
             isDragOver={dragOverIndex === i}
           >
             {vm.files[i] ? (
+              // 이미지가 있을 경우: 미리보기 및 삭제 버튼 표시
               <SpaceImageWrapper>
                 <img
-                  src={vm.previews[i]} // ✅ ViewModel의 previews 사용
+                  src={vm.previews[i]} // 미리보기 URL 사용
                   alt={`업로드 이미지 ${i + 1}`}
                   style={{
                     width: "100%",
@@ -110,18 +104,20 @@ const SpaceSettingsForm: React.FC<Props> = ({
                     objectFit: "cover",
                   }}
                 />
-                {i === 0 && <MainBadge>메인 사진</MainBadge>}
+                {i === 0 && <MainBadge>메인 사진</MainBadge>}{" "}
+                {/* 첫 번째 이미지는 메인 배지 표시 */}
                 <DeleteIconWrapper>
                   <img
                     src="/icons/delete.svg"
                     onClick={(e) => {
                       e.stopPropagation();
-                      vm.removeAt(i);
+                      vm.removeAt(i); // 특정 인덱스 이미지 삭제
                     }}
                   />
                 </DeleteIconWrapper>
               </SpaceImageWrapper>
             ) : (
+              // 이미지가 없을 경우: 업로드 안내 아이콘 표시
               <IconWrapper>
                 <img src="/icons/upload.svg" />
                 <p>이미지 업로드</p>
@@ -131,20 +127,14 @@ const SpaceSettingsForm: React.FC<Props> = ({
         ))}
       </StyledScrollContainer>
 
-      <ImageDropZone
-        onClick={vm.openPicker}
-        // onDrop={vm.onDrop}
-        // onDragOver={vm.onDragOver}
-        // onDragEnter={vm.onDragEnter}
-        // onDragLeave={vm.onDragLeave}
-        // isDragging={vm.isDragging}
-        isDragging={false} // ✅ false로 설정 (또는 DropZone 스타일에서 isDragging prop 제거)
-      >
+      {/* 이미지 드롭 존 (클릭 시에도 파일 선택기 열림) */}
+      <ImageDropZone onClick={vm.openPicker} isDragging={false}>
         <img src="/icons/upload.svg" height={30} width={30} />
         <span>추가 이미지 업로드 ({5 - vm.files.length}장 더 가능)</span>
         <p>드래그 하거나 클릭해서 업로드 JPG • PNG</p>
       </ImageDropZone>
 
+      {/* 숨겨진 파일 인풋: vm.inputRef와 vm.onChange를 통해 실제 파일 처리 */}
       <input
         type="file"
         multiple
@@ -154,7 +144,7 @@ const SpaceSettingsForm: React.FC<Props> = ({
         onChange={vm.onChange}
       />
 
-      {/* 2. 필드 영역 */}
+      {/* 공간 이름 필드 입력 영역 */}
       <Field>
         <Label>공간 이름</Label>
         <Input
@@ -164,6 +154,7 @@ const SpaceSettingsForm: React.FC<Props> = ({
         />
       </Field>
 
+      {/* 수용 인원 필드 입력 영역 */}
       <Field>
         <Label>수용 인원</Label>
         <Input
@@ -172,13 +163,13 @@ const SpaceSettingsForm: React.FC<Props> = ({
           onChange={(e) => {
             const value = e.target.value;
 
-            // ✅ 수정: 입력 제어는 Input 핸들러가 아닌 ViewModel의 handleCapacityChange가 담당
             vm.handleCapacityChange(value);
           }}
           errorMessage={vm.capacityErrorMessage}
         />
       </Field>
 
+      {/* 지역 선택 영역 */}
       <Field>
         <Label>지점</Label>
         <Selectbox2
@@ -195,6 +186,7 @@ const SpaceSettingsForm: React.FC<Props> = ({
         />
       </Field>
 
+      {/* 카테고리 선택 영역 */}
       <Field>
         <Label>공간 카테고리</Label>
         <Selectbox2
@@ -205,6 +197,7 @@ const SpaceSettingsForm: React.FC<Props> = ({
         />
       </Field>
 
+      {/* 공간 담당자 선택 영역 */}
       <Field>
         <Label>담당자</Label>
         <Selectbox2
@@ -215,6 +208,7 @@ const SpaceSettingsForm: React.FC<Props> = ({
         />
       </Field>
 
+      {/* 편의시설 선택 영역 */}
       <Field>
         <Label>
           편의시설 <span>(선택 {form.space.tagNames.length}개)</span>
@@ -246,6 +240,7 @@ const SpaceSettingsForm: React.FC<Props> = ({
         />
       </Field>
 
+      {/* 공간 설명 입력 영역 */}
       <Field>
         <Label>공간 설명</Label>
         <Textarea
@@ -257,6 +252,7 @@ const SpaceSettingsForm: React.FC<Props> = ({
         />
       </Field>
 
+      {/* 공간 예약 과정 입력 영역 */}
       <Field>
         <Label>예약 과정</Label>
         <Textarea
@@ -268,6 +264,7 @@ const SpaceSettingsForm: React.FC<Props> = ({
         />
       </Field>
 
+      {/* 공간 이용 수칙 입력 영역 */}
       <Field>
         <Label>이용 수칙</Label>
         <Textarea
@@ -277,6 +274,7 @@ const SpaceSettingsForm: React.FC<Props> = ({
         />
       </Field>
 
+      {/* 공간 활성화/비활성화 선택 영역 */}
       <Field>
         <Label>공간 활성화</Label>
         <Switch
