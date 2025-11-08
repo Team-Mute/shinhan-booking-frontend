@@ -17,6 +17,7 @@ import {
 import { SEARCH_OPTIONS } from "@admin/lib/constants/space";
 import { useModalStore } from "@admin/store/modalStore";
 import { useConfirmModalStore } from "@admin/store/confirmModalStore";
+import { useAdminAuthStore } from "@admin/store/adminAuthStore";
 
 /**
  * 공간 관리 페이지의 상태와 핸들러를 관리하는 커스텀 훅
@@ -25,6 +26,9 @@ export function useSpace() {
   /* 모달 스토어*/
   const { open } = useModalStore();
   const { open: openConfirmModal } = useConfirmModalStore();
+
+  /* 관리자 권한 체크 */
+  const roleId = useAdminAuthStore.getState().adminRoleId;
 
   /** 공간 리스트 */
   const [spaceList, setSpaceList] = useState<SpaceListItem[]>([]);
@@ -264,6 +268,8 @@ export function useSpace() {
   };
 
   return {
+    // 권한
+    roleId,
     // 상태
     spaceList,
     pagination,

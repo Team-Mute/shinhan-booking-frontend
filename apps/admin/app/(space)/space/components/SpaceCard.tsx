@@ -9,6 +9,7 @@ interface SpaceCardProps {
   region: string;
   manager: string;
   isPrivate?: boolean; // 비공개 여부
+  isEditable?: boolean; // 수정 혹은 삭제 가능 여부 (마스터 관리자는 버튼 클릭 불가)
   onEdit?: () => void; // 수정
   onDelete?: () => void; // 삭제
 }
@@ -19,6 +20,7 @@ const SpaceCard = ({
   region,
   manager,
   isPrivate,
+  isEditable = true,
   onEdit,
   onDelete,
 }: SpaceCardProps) => {
@@ -45,7 +47,13 @@ const SpaceCard = ({
 
       {/* 5. 버튼 */}
       <ButtonGroup>
-        <ActionButton flex={3} bg={colors.maincolor5} onClick={onEdit}>
+        <ActionButton
+          flex={3}
+          bg={colors.maincolor5}
+          onClick={onEdit}
+          isActive={isEditable}
+          disabled={!isEditable}
+        >
           수정하기
         </ActionButton>
 
@@ -53,6 +61,8 @@ const SpaceCard = ({
           flex={1}
           bg={colors.graycolor5}
           text={colors.graycolor100}
+          isActive={isEditable}
+          disabled={!isEditable}
           onClick={onDelete}
         >
           삭제
@@ -110,18 +120,6 @@ const OverlayText = styled.div`
   font-weight: 400;
 `;
 
-const DraftBadge = styled.div`
-  position: absolute;
-  top: 0.61rem;
-  right: 0.81rem;
-  background: ${colors.sementicFillStrong}66;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 1.25rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-`;
-
 const Title = styled.h3`
   font-size: 1rem;
   font-weight: 600;
@@ -155,14 +153,18 @@ const ActionButton = styled.button<{
   bg?: string;
   text?: string;
   borderLeft?: boolean;
+  isActive?: boolean;
 }>`
   flex: ${({ flex }) => flex || 1};
-  background: ${({ bg }) => bg || "transparent"};
+  background: ${({ isActive, bg }) =>
+    isActive ? bg || "transparent" : colors.graycolor5};
+  color: ${({ isActive, text }) =>
+    isActive ? text || colors.maincolor : colors.graycolor50};
   border: none;
   font-size: 0.75rem;
   font-weight: 500;
-  cursor: pointer;
-  color: ${({ text }) => text || colors.maincolor};
+  cursor: ${({ isActive }) => (isActive ? "pointer" : "not-allowed")};
+
   position: relative;
 
   ${({ borderLeft }) =>

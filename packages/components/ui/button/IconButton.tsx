@@ -49,12 +49,13 @@ const ButtonWrapper = styled.button<{
   gap: 0.3rem; /* 아이콘과 텍스트 간격 */
   padding: 0.5rem 0.75rem;
   height: 100%;
-  background-color: ${(props) => props.bgcolor};
+  background-color: ${(props) =>
+    !props.disabled ? props.bgcolor : colors.graycolor50};
   border: none;
   border-radius: 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;
   color: ${(props) => props.color};
-  cursor: pointer;
+  cursor: ${(props) => (!props.disabled ? "pointer" : "not-allowed")};
   disabled: ${(props) => props.disabled};
 `;

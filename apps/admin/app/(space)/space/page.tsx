@@ -7,7 +7,6 @@ import SearchBar from "@components/ui/searchbar/Searchbar";
 import SpaceCard from "./components/SpaceCard";
 import SpaceFormModal from "./components/SpaceFormModal";
 import { useSpace } from "./hooks/useSpace";
-import colors from "@styles/theme";
 import Loader from "@admin/components/Loader";
 import { GapBox } from "@admin/components/GapBox";
 import { SEARCH_OPTIONS } from "@admin/lib/constants/space";
@@ -26,6 +25,7 @@ import Pagination from "@components/ui/pagination/Pagination";
  */
 export default function SpacePage() {
   const {
+    roleId,
     spaceList,
     pagination,
     selectedRegionId,
@@ -54,23 +54,29 @@ export default function SpacePage() {
         <TitleWrapper>
           <h1>공간 관리</h1>
           <div style={{ width: "6.6rem" }}>
-            <IconButton label="새 공간 등록" onClick={handleOpenCreateModal} />
+            <IconButton
+              label="새 공간 등록"
+              onClick={handleOpenCreateModal}
+              disabled={roleId == 0}
+            />
           </div>
         </TitleWrapper>
 
         {/* 검색 바 */}
-        <SearchBarWrapper>
-          <SearchBar
-            options={SEARCH_OPTIONS}
-            selectedValue={selectedRegionId}
-            onSelectChange={handleSelect}
-            placeholder="지역명으로 검색"
-            searchValue={keyword}
-            onSearchChange={setKeyword}
-            onSearch={handleSearch}
-            isDropdownVisible={true}
-          />
-        </SearchBarWrapper>
+        {roleId != 2 && (
+          <SearchBarWrapper>
+            <SearchBar
+              options={SEARCH_OPTIONS}
+              selectedValue={selectedRegionId}
+              onSelectChange={handleSelect}
+              placeholder="지역명으로 검색"
+              searchValue={keyword}
+              onSearchChange={setKeyword}
+              onSearch={handleSearch}
+              isDropdownVisible={true}
+            />
+          </SearchBarWrapper>
+        )}
 
         {/* 공간 리스트 */}
         <CardContainer>
@@ -82,13 +88,14 @@ export default function SpacePage() {
               region={space.regionName}
               manager={space.adminName}
               isPrivate={!space.spaceIsAvailable}
+              isEditable={roleId !== 0}
               onEdit={() => handleOpenEditModal(space.spaceId)}
               onDelete={() => handleDeleteSpace(space.spaceId)}
             />
           ))}
         </CardContainer>
 
-       {/* 페이지네이션 */}
+        {/* 페이지네이션 */}
         <Pagination
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}
@@ -160,34 +167,4 @@ const CardContainer = styled.div`
   @media (max-width: 767px) {
     gap: 1rem;
   }
-`;
-
-const PageButton = styled.button<{ disabled?: boolean }>`
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: ${({ disabled }) => (disabled ? "#ccc" : colors.graycolor100)};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const PageNumber = styled.button<{ active?: boolean }>`
-  background: ${({ active }) => (active ? colors.graycolor10 : "transparent")};
-  color: ${({ active }) => (active ? colors.graycolor100 : colors.graycolor50)};
-  font-weight: 600;
-  border-radius: 2rem;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  border: ${({ active }) =>
-    active ? `1px solid ${colors.graycolor10}` : "none"};
-`;
-
-const PaginationWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-  gap: 1rem;
 `;
