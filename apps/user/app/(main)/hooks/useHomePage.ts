@@ -319,8 +319,9 @@ export function useHomePage() {
       const endDateToUse = tempEndDate || tempStartDate; // null이면 시작 날짜 사용
       const endTimeToUse = tempEndTime;
 
-      const end = `${format(endDateToUse, "yyyy-MM-dd")}T${endTimeToUse}:00`;
-
+      const secondValue = endTimeToUse === '23:59' ? '59' : '00';
+      const end = `${format(endDateToUse, "yyyy-MM-dd")}T${endTimeToUse}:${secondValue}`;
+      
       // 3. 커밋
       setStartDateTime(start);
       setEndDateTime(end);
