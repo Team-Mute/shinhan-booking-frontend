@@ -11,6 +11,7 @@ import Loader from "@admin/components/Loader";
 import { GapBox } from "@admin/components/GapBox";
 import { SEARCH_OPTIONS } from "@admin/lib/constants/space";
 import Pagination from "@components/ui/pagination/Pagination";
+import { media } from "@styles/breakpoints";
 
 /**
  * SpacePage 컴포넌트
@@ -159,12 +160,12 @@ const CardContainer = styled.div`
   grid-template-columns: repeat(auto-fit, 22rem);
   gap: 3.5rem 1rem;
   margin-top: 1.5rem;
-  justify-content: center;
   width: 100%;
   max-width: calc(3 * 22rem + 2 * 1rem);
   margin-left: auto;
   margin-right: auto;
-  @media (max-width: 767px) {
+  ${media.mobile} {
     gap: 1rem;
+    justify-content: center;
   }
 `;
