@@ -1,13 +1,14 @@
 import React from "react";
 import styled from "@emotion/styled";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { statusOptions } from "../components/CalendarSettingModal";
+import { StatusOption } from "@admin/lib/constants/dashboard";
 
 interface CalendarHeaderProps {
   date: Date;
   setDate: React.Dispatch<React.SetStateAction<Date>>;
   onSettingsClick: () => void;
   visibleStatuses: string[];
+  statusOptions: StatusOption[]; // 동적으로 전달받음
 }
 
 /**
@@ -21,6 +22,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   setDate,
   onSettingsClick,
   visibleStatuses,
+  statusOptions,
 }) => {
   /**
    * 월 변경 핸들러

@@ -1,5 +1,20 @@
-import { DashBoardCard, RawReservationData } from "@admin/types/dashBoardAdmin";
+import { DashBoardCard, RawReservationData, StatusFilter } from "@admin/types/dashBoardAdmin";
 import adminAxiosClient from "./adminAxiosClient";
+
+/**
+ * 예약 상태 필터 옵션 조회 (DB 기반)
+ */
+export const getDashboardFiltersApi = async (): Promise<StatusFilter[]> => {
+  try {
+    const response = await adminAxiosClient.get<StatusFilter[]>(
+      '/api/dashboard-admin/filters'
+    );
+    return response.data;
+  } catch (error) {
+    console.error('예약 상태 필터 조회 실패:', error);
+    throw error;
+  }
+};
 
 // 대시보드 카드 API
 export const getDashboardCardApi = async (): Promise<DashBoardCard[]> => {
