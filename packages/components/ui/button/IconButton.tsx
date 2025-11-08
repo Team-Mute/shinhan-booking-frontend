@@ -50,12 +50,12 @@ const ButtonWrapper = styled.button<{
   padding: 0.5rem 0.75rem;
   height: 100%;
   background-color: ${(props) =>
-    !props.disabled ? props.bgcolor : colors.graycolor50};
+    !props.disabled ? props.bgcolor : colors.graycolor5};
   border: none;
   border-radius: 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: ${(props) => props.color};
+  color: ${(props) => (!props.disabled ? props.color : colors.graycolor50)};
   cursor: ${(props) => (!props.disabled ? "pointer" : "not-allowed")};
   disabled: ${(props) => props.disabled};
 `;
