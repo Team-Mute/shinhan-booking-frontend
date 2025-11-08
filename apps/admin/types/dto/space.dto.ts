@@ -38,7 +38,7 @@ export type Operation = {
 };
 
 // 휴무일 타입
-type ClosedDay = {
+export type ClosedDay = {
   from: string; // ex) 2025-10-03T00:00:00
   to: string;
 };
