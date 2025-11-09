@@ -27,9 +27,9 @@ export function useResetPassword() {
 
   const handleResetPW = async () => {
     try {
-      const response = await resetAdminPasswordApi({ userEmail: email });
+      const { status } = await resetAdminPasswordApi({ userEmail: email });
 
-      if (response.status === 200) {
+      if (status === 200) {
         open(
           "안내",
           "임시 비밀번호가 발송되었습니다.\n다시 로그인해주세요.",
