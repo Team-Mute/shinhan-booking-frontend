@@ -111,40 +111,6 @@ export async function getAvailableDatesApi(
   return data;
 }
 
-/**
- * 응답
- * {
-  "availableDays": [
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    16,
-    17,
-    18,
-    19,
-    20,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    29,
-    30
-  ]
-}
- * 
- */
-
 // 예약 가능 시간 조회: getAvailableTimesApi
 export async function getAvailableTimesApi(
   spaceId: number,
@@ -160,19 +126,8 @@ export async function getAvailableTimesApi(
   });
   return data;
 }
-// 응답
-/*
-{
-  "availableTimes": [
-    {
-      "startTime": "09:00:00",
-      "endTime": "18:00:00"
-    }
-  ]
-}
-*/
 
-// ?? 조회
+// 반려 메시지 조회
 export async function getReservationRejectMsgApi(reservationId: number) {
   const { data } = await axiosClient.get(
     `/api/reservations/rejectMassage/${reservationId}`
