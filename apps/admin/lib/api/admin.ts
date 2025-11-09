@@ -51,9 +51,9 @@ export async function updatePasswordApi(data: PasswordUpdateRequest) {
 
 // 관리자 비밀번호 초기화 API
 export async function resetAdminPasswordApi(data: PasswordResetRequest) {
-  const { data: response } = await adminAxiosClient.post(
+  const { data: response, status } = await adminAxiosClient.post(
     "/api/admin/reset-password",
     data
   );
-  return response;
+  return { response, status };
 }
