@@ -9,6 +9,7 @@ import FooterDesktop from "@user/components/FooterDesktop";
 import FooterMobile from "@user/components/FooterMobile";
 import HeaderDesktop from "@user/components/HeaderDesktop";
 import HeaderMobile from "@user/components/HeaderMobile";
+import styled from "@emotion/styled";
 /**
  * LayoutManager 컴포넌트
  * -----------------------
@@ -30,7 +31,9 @@ export default function LayoutManager({ children }: Props) {
       <InfoModal /> {/* 전역 알림 모달 */}
       <HeaderDesktop />
       <HeaderMobile />
-      <main>{children}</main> {/* 실제 페이지 콘텐츠 */}
+      <PageWrapper>
+        <main>{children}</main> {/* 실제 페이지 콘텐츠 */}
+      </PageWrapper>
       {/* 푸터 조건부 렌더링 */}
       {isFooterFreePage ? (
         <></> // 푸터가 필요 없는 페이지는 렌더링 안 함
@@ -47,3 +50,8 @@ export default function LayoutManager({ children }: Props) {
 type Props = {
   children: ReactNode;
 };
+
+const PageWrapper = styled.div`
+  display: flex;
+  margin-top: var(--header-height);
+`;
