@@ -84,7 +84,7 @@ export default function MySideBar() {
                   </SubMenu>
                 </MenuSection>
 
-                <Link href="/mypage/user">
+                <Link href="/mypage/manage-account">
                   <MenuLink>
                     <MenuTitle>회원정보 관리</MenuTitle>
                     <VectorLogo />
