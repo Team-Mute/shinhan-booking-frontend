@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "@user/store/authStore";
 import { AUTH_FREE_PAGES } from "@user/lib/constants/routes";
 
@@ -19,7 +19,7 @@ export default function UserProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   // 인증이 필요 없는 페이지인지 확인
-  const isAuthFreePage = AUTH_FREE_PAGES.includes(pathname);
+  // const isAuthFreePage = AUTH_FREE_PAGES.includes(pathname);
 
   // Zustand 스토어에서 인증 관련 상태 및 persist 복원 상태 조회
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -28,6 +28,15 @@ export default function UserProvider({ children }: { children: ReactNode }) {
   // 인증/권한 확인 진행 상태
   const [isChecking, setIsChecking] = useState(false); // persist 복원 완료 여부 (라우팅 로직 실행 준비)
   const [authorized, setAuthorized] = useState<boolean | null>(null); // null = 체크 중 / true = 통과 / false = 거부
+
+  // 인증이 필요 없는 페이지인지 확인
+  const isAuthFreePage = useMemo(() => {
+    // Array.some()을 사용하여 배열의 항목 중 하나라도 조건(startsWith)을 만족하는지 검사
+    return AUTH_FREE_PAGES.some((freePath) =>
+      // 현재 경로(pathname)가 AUTH_FREE_PAGES의 항목(freePath)으로 시작하는지 확인
+      pathname.startsWith(freePath)
+    );
+  }, [pathname]);
 
   /**
    * (1) Zustand persist 복원 완료 시 라우팅 로직 실행 준비
