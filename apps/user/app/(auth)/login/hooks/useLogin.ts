@@ -1,5 +1,5 @@
-import { useApiErrorHandler } from "@admin/lib/hooks/useApiErrorHandler";
-import { useModalStore } from "@admin/store/modalStore";
+import { useApiErrorHandler } from "@user/hooks/useApiErrorHandler";
+import { useModalStore } from "@user/store/modalStore";
 import { loginApi } from "@user/lib/api/userAuth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -50,7 +50,7 @@ export function useLogin() {
       await loginApi(email, password);
       router.push("/");
     } catch (err: any) {
-      if (err?.status === 401) {
+      if (err?.status == 401) {
         open("안내", "로그인에 실패했습니다.");
       } else {
         handleError(err);
