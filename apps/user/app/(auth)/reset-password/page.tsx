@@ -63,7 +63,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 80px;
+  padding-top: 10.25rem;
 `;
 
 const TitleText = styled.h2`
