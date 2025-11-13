@@ -1,11 +1,17 @@
 /**
+ * 헤더가 필요 없는 페이지 경로 목록
+ */
+export const HEADER_FREE_PAGES = ["/invitation"];
+
+/**
  * 푸터가 필요 없는 페이지 경로 목록
  */
 export const FOOTER_FREE_PAGES = [
   "/login",
   "/reset-password",
   "/mypage/change-password",
-  "/signup"
+  "/signup",
+  "/invitation",
 ];
 
 /**
@@ -18,5 +24,5 @@ export const AUTH_FREE_PAGES = [
   "/",
   "/spaces",
   "/signup",
-  "/invitation"
+  "/invitation",
 ];
