@@ -15,7 +15,7 @@
  *
  */
 
-import { ReservationRequest } from "@user/types/reservation.dto";
+import { ReservCreateBody } from "@user/types/reservation.dto";
 import axiosClient from "./axiosClient";
 
 // 예약 단건 조회
@@ -27,7 +27,7 @@ export async function getReservationApi(reservationId: number) {
 // 예약 단건 수정
 export async function updateReservationApi(
   reservationId: number,
-  { requestDto, files }: ReservationRequest
+  { requestDto, files }: ReservCreateBody
 ) {
   const formData = new FormData();
   formData.append("requestDto", JSON.stringify(requestDto));
@@ -65,7 +65,7 @@ export async function getReservationListApi(filterOption: string) {
 export async function createReservationApi({
   requestDto,
   files,
-}: ReservationRequest) {
+}: ReservCreateBody) {
   const formData = new FormData();
 
   const jsonBlob = new Blob([JSON.stringify(requestDto)], {
