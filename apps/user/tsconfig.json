@@ -26,7 +26,8 @@
     "**/*.ts",
     "**/*.tsx",
     "../../packages/**/*",
-    "next.config.js"
+    "next.config.js",
+    "react-app-env.d.ts"
   ],
   "exclude": ["node_modules"]
 }
