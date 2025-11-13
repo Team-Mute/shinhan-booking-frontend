@@ -9,7 +9,7 @@ import {
 } from "@user/lib/api/reservation";
 import ReservationCancelModal from "./ReservationCancelModal";
 import ReservationChangeModal from "./ReservationChangeModal";
-
+import { useRouter } from "next/navigation";
 // --- 타입 정의 ---
 interface Previsit {
   previsitId: number;
@@ -17,6 +17,7 @@ interface Previsit {
   previsitTo: string;
 }
 interface ReservationDetails {
+  spaceId: number;
   spaceName: string;
   spaceImageUrl: string | null;
   orderId: string;
@@ -74,6 +75,7 @@ export default function ReservationInfoModal({
   reservationId,
   status,
 }: ReservationInfoModalProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"info" | "reason">("info");
   const [reservation, setReservation] = useState<ReservationDetails | null>(
     null
@@ -142,6 +144,11 @@ export default function ReservationInfoModal({
 
   if (!isOpen) return null;
 
+  // 공간 상세 페이지 이동
+  const handleLocationClick = (spaceId) => {
+    router.push(`/spaces/${spaceId}`);
+  };
+
   // ... (renderInfoContent 함수 동일)
   const renderInfoContent = () => {
     if (isLoading) return <LoadingState>로딩 중...</LoadingState>;
@@ -169,7 +176,7 @@ export default function ReservationInfoModal({
               alt={reservation.spaceName}
             />
           )}
-          <DetailValue>{reservation.spaceName}</DetailValue>
+          <DetailValue onClick={() => handleLocationClick(reservation.spaceId)}>{reservation.spaceName}</DetailValue>
         </DetailItem>
         <InfoRow label="예약번호" value={reservation.orderId} />
         <InfoRow label="이용날짜" value={from.date} />
@@ -405,6 +412,7 @@ const DetailValue = styled.p`
   font-weight: 500;
   color: #191f28;
   margin: 0;
+  cursor: pointer;
 `;
 const SpaceImage = styled.img`
   width: 100%;

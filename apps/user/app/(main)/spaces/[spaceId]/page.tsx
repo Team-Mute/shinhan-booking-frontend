@@ -106,41 +106,43 @@ export default function SpaceDetailPage() {
               <SubTitle>이용시간</SubTitle>
               {/* 공간 이용 시간 */}
               <Value>
-                <TimePickerWrapper>
-                  {/* 시작 시간 */}
-                  <SelectBox2
-                    options={adjustedStartTimeOptions}
-                    value={
-                      isRangeSelected
-                        ? "00:00"
-                        : reservationStore.time?.start || ""
-                    }
-                    placeholder="시작 시간 선택"
-                    disabled={!selectedStartDate || isRangeSelected}
-                    onChange={(opt) => {
-                      setReservation({ time: { start: opt, end: undefined } });
-                    }}
-                  />
+              <TimePickerWrapper>
+                {isRangeSelected ? (
+                  // isRangeSelected가 true일 때 표시할 문구
+                  <RangeInfo>
+                    하루가 아닌 기간으로 예약할 시 운영시간 전체로 예약이 됩니다. 운영시간을 공간 안내에서 확인해 주세요.
+                  </RangeInfo>
+                ) : (
+                  // isRangeSelected가 false일 때 시간 선택 SelectBox 렌더링
+                  <>
+                    {/* 시작 시간 */}
+                    <SelectBox2
+                      options={adjustedStartTimeOptions}
+                      value={reservationStore.time?.start || ""}
+                      placeholder="시작 시간 선택"
+                      disabled={!selectedStartDate || isRangeSelected}
+                      onChange={(opt) => {
+                        setReservation({ time: { start: opt, end: undefined } });
+                      }}
+                    />
 
-                  <span>~</span>
+                    <span>~</span>
 
-                  {/* 종료 시간 */}
-                  <SelectBox2
-                    options={adjustedEndTimeOptions}
-                    value={
-                      isRangeSelected
-                        ? "23:59"
-                        : reservationStore.time?.end || ""
-                    }
-                    placeholder="종료 시간 선택"
-                    disabled={isRangeSelected || !reservationStore.time?.start}
-                    onChange={(opt) => {
-                      const start = reservationStore.time?.start || "";
-                      setReservation({ time: { start: start, end: opt } });
-                    }}
-                  />
-                </TimePickerWrapper>
-              </Value>
+                    {/* 종료 시간 */}
+                    <SelectBox2
+                      options={adjustedEndTimeOptions}
+                      value={reservationStore.time?.end || ""}
+                      placeholder="종료 시간 선택"
+                      disabled={isRangeSelected || !reservationStore.time?.start}
+                      onChange={(opt) => {
+                        const start = reservationStore.time?.start || "";
+                        setReservation({ time: { start: start, end: opt } });
+                      }}
+                    />
+                  </>
+                )}
+            </TimePickerWrapper>
+            </Value>
             </RInfoWrapper>
             <RInfoWrapper>
               <SubTitle>이용인원</SubTitle>
@@ -154,14 +156,13 @@ export default function SpaceDetailPage() {
             </RInfoWrapper>
             <ButtonWrapper>
               {/* 예약 페이지 이동 버튼 - 로그인 시에만 가능 */}
-              <Button
-                width={"100%"}
-                type="button"
-                isActive={!!isReservable}
+              <ReservationButton
+                isActive={!!isReservable && spaceDetail?.spaceIsAvailable !== false}
+                disabled={!isReservable || spaceDetail?.spaceIsAvailable === false}
                 onClick={handleReservationClick}
               >
                 예약하러 가기
-              </Button>
+              </ReservationButton>
             </ButtonWrapper>
           </ReservationInfo>
         </InfoWrapper>
@@ -340,4 +341,32 @@ const TimePickerWrapper = styled.div`
 
 const ButtonWrapper = styled.div`
   margin: 1.5rem 0;
+`;
+
+const RangeInfo = styled.div`
+  padding: 8px 0;
+  textAlign: center;
+  width: 100%;
+  color: #191F28;
+`
+
+// 예약하기 버튼 
+interface ReservationButtonProps {
+  isActive: boolean;
+}
+const ReservationButton = styled.button<ReservationButtonProps>`
+  width: 100%;
+  height: 46px;
+  border-radius: 8px;
+  border: none;
+  background-color: ${({ isActive }) => 
+    isActive ? colors.maincolor : colors.graycolor10};
+    
+  color: ${({ isActive }) => 
+    isActive ? "white" : colors.graycolor100};
+    
+  cursor: ${({ isActive }) => (isActive ? "pointer" : "not-allowed")};
+
+  font-size: 14px;
+  transition: background-color 0.3s ease;
 `;
