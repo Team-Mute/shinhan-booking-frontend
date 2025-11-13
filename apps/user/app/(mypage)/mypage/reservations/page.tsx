@@ -20,6 +20,7 @@ interface ApiResponseReservation {
   reservationId: number;
   reservationStatusName: "진행중" | "예약완료" | "이용완료" | "취소" | "반려";
   orderId: string;
+  spaceId: number;
   spaceName: string;
   reservationFrom: string;
   reservationTo: string;
@@ -31,6 +32,7 @@ interface Reservation {
   reservationId: number;
   id: string; // orderId
   status: "진행중" | "예약완료" | "이용완료" | "취소" | "반려";
+  spaceId: number;
   location: string; // spaceName
   mainDate: string;
   mainTime: string;
@@ -89,6 +91,7 @@ const mapApiDataToReservation = (
     reservationId: apiData.reservationId,
     id: apiData.orderId,
     status: uiStatus,
+    spaceId: apiData.spaceId,
     location: apiData.spaceName,
     mainDate: mainDate,
     mainTime: `${fromTime} ~ ${toTime}`,
@@ -167,6 +170,11 @@ export default function MyPageReservations() {
     }
   };
 
+  // 공간 상세 페이지 이동
+  const handleLocationClick = (spaceId) => {
+    router.push(`/spaces/${spaceId}`);
+  };
+
   const renderContent = () => {
     if (filteredReservations.length === 0) {
       return <EmptyState>예약 내역이 없습니다.</EmptyState>;
@@ -181,7 +189,9 @@ export default function MyPageReservations() {
               </StatusBadge>
               <ReservationNumber>예약번호: {reservation.id}</ReservationNumber>
             </InfoTop>
-            <Location>{reservation.location}</Location>
+              <Location onClick={() => handleLocationClick(reservation.spaceId)}>
+                {reservation.location}
+              </Location>
             <Schedule>
               <DateTime>
                 <span>{reservation.mainDate}</span>
@@ -487,6 +497,7 @@ const Location = styled.h2`
   font-size: 16px;
   color: #191f28;
   margin: 0;
+  cursor: pointer;
 `;
 
 const Schedule = styled.div`
