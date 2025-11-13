@@ -155,7 +155,7 @@ export default function ReservationInfoModal({
       reservation.reservationTo
     );
     const previsit =
-      reservation.previsits.length > 0
+      reservation.previsits?.length > 0
         ? formatDateTime(reservation.previsits[0].previsitFrom)
         : null;
 
