@@ -82,6 +82,7 @@ export type SpaceDetailResponse = Space & {
   regionName: string; // 지역 이름 (Space의 location 정보와 중복되지만, 응답 형태를 따름)
   reservationWay: string; // 예약 방식
   spaceRules: string; // 공간 이용 규칙
+  spaceIsAvailable: boolean, // 공간 활성화 여부
   manager: Manager; // 공간 관리자 정보
   detailImageUrls: string[]; // 상세 이미지 URL 목록
   operations: Operation[]; // 주간 운영 시간 정보

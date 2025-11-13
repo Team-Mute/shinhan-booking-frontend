@@ -156,14 +156,13 @@ export default function SpaceDetailPage() {
             </RInfoWrapper>
             <ButtonWrapper>
               {/* 예약 페이지 이동 버튼 - 로그인 시에만 가능 */}
-              <Button
-                width={"100%"}
-                type="button"
-                isActive={!!isReservable}
+              <ReservationButton
+                isActive={!!isReservable && spaceDetail?.spaceIsAvailable !== false}
+                disabled={!isReservable || spaceDetail?.spaceIsAvailable === false}
                 onClick={handleReservationClick}
               >
                 예약하러 가기
-              </Button>
+              </ReservationButton>
             </ButtonWrapper>
           </ReservationInfo>
         </InfoWrapper>
@@ -350,3 +349,24 @@ const RangeInfo = styled.div`
   width: 100%;
   color: #191F28;
 `
+
+// 예약하기 버튼 
+interface ReservationButtonProps {
+  isActive: boolean;
+}
+const ReservationButton = styled.button<ReservationButtonProps>`
+  width: 100%;
+  height: 46px;
+  border-radius: 8px;
+  border: none;
+  background-color: ${({ isActive }) => 
+    isActive ? colors.maincolor : colors.graycolor10};
+    
+  color: ${({ isActive }) => 
+    isActive ? "white" : colors.graycolor100};
+    
+  cursor: ${({ isActive }) => (isActive ? "pointer" : "not-allowed")};
+
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+`;
