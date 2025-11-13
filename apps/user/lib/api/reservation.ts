@@ -11,7 +11,7 @@
  * 예약 가능 일 조회: getAvailableDatesApi
  * 예약 가능 시간 조회: getAvailableTimesApi
  *
- * 반려 사유 조회: /api/reservations/rejectMassage/{reservation_id}
+ * 반려 사유 조회: /api/reservations/rejectMassage/{reservationId}
  *
  */
 
