@@ -5,7 +5,7 @@ export const FOOTER_FREE_PAGES = [
   "/login",
   "/reset-password",
   "/mypage/change-password",
-  "/signup",
+  "/signup"
 ];
 
 /**
@@ -18,4 +18,5 @@ export const AUTH_FREE_PAGES = [
   "/",
   "/spaces",
   "/signup",
+  "/invitation"
 ];

@@ -94,7 +94,7 @@ export type ReservCreateResponse = ReservPayload & {
 };
 
 /** 예약 취소 요청 DTO */
-export type ReservCancelParams = { reservation_id: number }; // Pick<ReservCreateResponse, "reservationId">;
+export type ReservCancelParams = { reservationId: number }; // Pick<ReservCreateResponse, "reservationId">;
 
 /** 예약 취소 응답 DTO */
 export type ReservCancelResponse = {
@@ -131,7 +131,7 @@ export type ReservPossibleDateResponse = {
 };
 
 /** 예약 단건 조회 요청 DTO */
-export type ReservDetailParams = { reservation_id: number }; // Pick<ReservCreateResponse, "reservationId">;
+export type ReservDetailParams = { reservationId: number }; // Pick<ReservCreateResponse, "reservationId">;
 
 /** 예약 단건 조회 응답 DTO */
 export type ReservDetailResponse = {
@@ -148,10 +148,10 @@ export type ReservDetailResponse = {
 };
 
 /** 예약 삭제 요청 DTO */
-export type ReservDeleteParams = { reservation_id: number }; // Pick<ReservCreateResponse, "reservationId">;
+export type ReservDeleteParams = { reservationId: number }; // Pick<ReservCreateResponse, "reservationId">;
 
 /** 예약 반려 메시지 조회 요청 DTO */
-export type ReservRejectMsgParams = { reservation_id: number }; // Pick<ReservCreateResponse, "reservationId">;
+export type ReservRejectMsgParams = { reservationId: number }; // Pick<ReservCreateResponse, "reservationId">;
 
 /** 예약 반려 메시지 조회 응답 DTO */
 export type ReservRejectMsgResponse = {
