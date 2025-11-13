@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import EmotionProvider from "./_providers/EmotionProvider";
 import LayoutManager from "./_providers/LayoutManager";
 import UserProvider from "./_providers/UserProvider";
+import Script from "next/script";
 
 /**
  * 페이지 메타데이터
@@ -32,6 +33,12 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html>
+      <head>
+        <Script
+          strategy="beforeInteractive"
+          src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAOMAP_API_KEY}&autoload=false&libraries=services`}
+        />
+      </head>
       <body>
         <UserProvider>
           <EmotionProvider>

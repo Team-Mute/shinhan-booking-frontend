@@ -30,10 +30,6 @@ export default function LayoutManager({ children }: Props) {
   return (
     <UserProvider>
       <InfoModal /> {/* 전역 알림 모달 */}
-      <Script
-        strategy="beforeInteractive"
-        src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAOMAP_API_KEY}&autoload=false&libraries=services`}
-      />
       <HeaderDesktop />
       <HeaderMobile />
       <PageWrapper>
