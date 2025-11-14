@@ -48,7 +48,7 @@ export function useLogin() {
   const handleLogin = async () => {
     try {
       await loginApi(email, password);
-      router.push("/");
+      router.push("/spaces");
     } catch (err: any) {
       if (err?.status == 401) {
         open("안내", "로그인에 실패했습니다.");

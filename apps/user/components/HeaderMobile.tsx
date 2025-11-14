@@ -34,7 +34,7 @@ export default function HeaderMobile() {
   return (
     <>
       <HeaderWrapper>
-        <Link href="/">
+        <Link href="/spaces">
           <Logo src="/logo/shinhanfoundation.svg" alt="로고" />
         </Link>
 

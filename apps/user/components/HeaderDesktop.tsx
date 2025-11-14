@@ -13,7 +13,7 @@ import { useLogout } from "@user/hooks/useLogout";
  * 데스크탑 화면에서만 보이는 상단 헤더.
  *
  * 1. HeaderWrapper : 헤더 영역 전체를 감싸는 styled 컴포넌트
- * 2. <Link href="/"> : 로고 클릭 시 공간 검색 메인 페이지로 이동
+ * 2. <Link href="/spaces"> : 로고 클릭 시 공간 검색 메인 페이지로 이동
  * 3. Logo : 로고 이미지 표시
  *
  * @remarks
@@ -28,7 +28,7 @@ export default function HeaderDesktop() {
     <>
       <HeaderWrapper>
         <Left>
-          <Link href="/">
+          <Link href="/spaces">
             <Logo src="/logo/shinhanfoundation.svg" alt="로고" />
           </Link>
         </Left>

@@ -486,7 +486,7 @@ export default function ReservationConfirmPage() {
           }}
           onCancel={() => {
             setIsSuccessModalOpen(false);
-            router.push("/");
+            router.push("/spaces");
           }}
         />
       </Loader>
