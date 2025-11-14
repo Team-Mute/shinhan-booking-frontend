@@ -254,6 +254,25 @@ export function useReservationConfirm() {
       return;
     }
 
+    // 종료시간 가공 로직
+    // 만약 종료 시간이 23:59이면, combineDateAndTime을 호출할 때 초(second) 정보를 59로 명시하도록 수정
+    const endDateTime = reservationStore.endDate || reservationStore.startDate;
+    const endTime = reservationStore.time?.end;
+
+    let processedReservationTo;
+    if (endTime === "23:59") {
+        // 23:59일 경우, 날짜만 조합하고 시간을 23:59:59로 수동 설정
+        const formattedDate = format(endDateTime, "yyyy-MM-dd");
+        processedReservationTo = `${formattedDate}T23:59:59`;
+    } else {
+        // 그 외의 경우, combineDateAndTime 로직 사용 (예: 10:30:00)
+        processedReservationTo = combineDateAndTime(
+            endDateTime,
+            endTime,
+            "end"
+        ) ?? "";
+    }
+
     try {
       // ... (예약 페이로드 구성 및 API 호출) ...
       const reservationPayload: ReservPayload = {
@@ -265,12 +284,7 @@ export function useReservationConfirm() {
             reservationStore.time?.start,
             "start"
           ) ?? "",
-        reservationTo:
-          combineDateAndTime(
-            reservationStore.endDate || reservationStore.startDate,
-            reservationStore.time?.end,
-            "end"
-          ) ?? "",
+        reservationTo: processedReservationTo,
         reservationPurpose: purpose,
         reservationAttachments: [],
         previsitInfo:
