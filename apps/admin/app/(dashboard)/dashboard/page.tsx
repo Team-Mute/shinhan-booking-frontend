@@ -3,7 +3,12 @@
 import React, { useState, useEffect } from "react";
 import styled from "@emotion/styled";
 import { useRouter } from "next/navigation";
-import { DashBoardCard, ReservationStatus, ProcessedReservation, StatusFilter } from "@admin/types/dashBoardAdmin";
+import {
+  DashBoardCard,
+  ReservationStatus,
+  ProcessedReservation,
+  StatusFilter,
+} from "@admin/types/dashBoardAdmin";
 import {
   getDashboardCardApi,
   getDashboardReservationsApi,
@@ -38,11 +43,11 @@ export default function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [reservations, setReservations] = useState<ProcessedReservation[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   // 동적으로 로드된 상태 옵션
   const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
   const [isStatusLoaded, setIsStatusLoaded] = useState(false);
-  
+
   // localStorage를 통한 캘린더 설정 저장
   const [visibleStatuses, setVisibleStatuses] = useLocalStorage<string[]>(
     STORAGE_KEYS.VISIBLE_STATUSES,
@@ -52,13 +57,17 @@ export default function Dashboard() {
   /**
    * API 응답을 StatusOption으로 변환하는 함수
    */
-  const convertApiFiltersToStatusOptions = (apiFilters: StatusFilter[]): StatusOption[] => {
+  const convertApiFiltersToStatusOptions = (
+    apiFilters: StatusFilter[]
+  ): StatusOption[] => {
     return apiFilters
-      .filter(filter => filter.type === 'STATUS')
-      .map(filter => {
+      .filter((filter) => filter.type === "STATUS")
+      .map((filter) => {
         const statusKey = API_ID_TO_STATUS_KEY[filter.id];
-        const color = DOT_COLORS[filter.description as keyof typeof DOT_COLORS] || '#8C8F93';
-        
+        const color =
+          DOT_COLORS[filter.description as keyof typeof DOT_COLORS] ||
+          "#8C8F93";
+
         return {
           id: statusKey,
           label: filter.description,
@@ -76,10 +85,10 @@ export default function Dashboard() {
       try {
         const apiFilters = await getDashboardFiltersApi();
         const options = convertApiFiltersToStatusOptions(apiFilters);
-        
+
         setStatusOptions(options);
         setIsStatusLoaded(true);
-        
+
         console.log("예약 상태 필터 로드 완료:", options);
       } catch (err) {
         console.error("예약 상태 필터 로드 실패:", err);
@@ -105,10 +114,14 @@ export default function Dashboard() {
       // 선택된 상태 키를 API ID로 변환
       const statusIds = visibleStatuses
         .map((statusKey) => STATUS_KEY_TO_API_ID[statusKey])
-        .filter(id => id !== undefined);
+        .filter((id) => id !== undefined);
 
       try {
-        const rawData = await getDashboardReservationsApi(year, month, statusIds);
+        const rawData = await getDashboardReservationsApi(
+          year,
+          month,
+          statusIds
+        );
         const processedData = processApiData(rawData);
         setReservations(processedData);
       } catch (err) {
@@ -147,7 +160,8 @@ export default function Dashboard() {
     } else if (status === "신한") {
       router.push(`/reservation?isShinhan=true`);
     } else {
-      const statusKey = STATUS_LABEL_TO_KEY[status as keyof typeof STATUS_LABEL_TO_KEY];
+      const statusKey =
+        STATUS_LABEL_TO_KEY[status as keyof typeof STATUS_LABEL_TO_KEY];
       if (statusKey) {
         const statusId = STATUS_KEY_TO_API_ID[statusKey];
         router.push(`/reservation?statusId=${statusId}`);
@@ -184,11 +198,11 @@ export default function Dashboard() {
         {cardData.map((item) => (
           <StyledCard
             key={item.label}
-            onClick={() => handleStatusCardClick(item.label as ReservationStatus)}
+            onClick={() =>
+              handleStatusCardClick(item.label as ReservationStatus)
+            }
           >
-            <Badge status={item.label as ReservationStatus}>
-              {item.label}
-            </Badge>
+            <Badge status={item.label as ReservationStatus}>{item.label}</Badge>
             <Count>{item.count}건</Count>
           </StyledCard>
         ))}
@@ -224,7 +238,6 @@ export default function Dashboard() {
 
 // Styled Components
 const DashboardContainer = styled.div`
-  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -246,10 +259,10 @@ const LoadingText = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 24px;
-  font-weight: 600;
-  color: #000000;
-  margin: 0;
+  .h1 {
+    font-weight: 600;
+    font-size: 1.5rem;
+  }
 `;
 
 const SummaryContainer = styled.div`
@@ -286,8 +299,9 @@ const Badge = styled.div<{ status: ReservationStatus }>`
   font-size: 11px;
   font-weight: 600;
   width: fit-content;
-  background-color: ${({ status }) => STATUS_COLORS_BY_NAME[status]?.bg || '#F3F4F4'};
-  color: ${({ status }) => STATUS_COLORS_BY_NAME[status]?.text || '#8C8F93'};
+  background-color: ${({ status }) =>
+    STATUS_COLORS_BY_NAME[status]?.bg || "#F3F4F4"};
+  color: ${({ status }) => STATUS_COLORS_BY_NAME[status]?.text || "#8C8F93"};
 `;
 
 const Count = styled.p`

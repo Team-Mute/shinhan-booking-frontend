@@ -5,11 +5,18 @@ import { css } from "@emotion/react";
 
 import styled from "@emotion/styled";
 import { IoCheckmarkSharp } from "react-icons/io5"; // 체크마크 아이콘 추가
+import { formatDate, formatTimeRange } from "@admin/lib/utils/reservationUtils";
 import {
-  formatDate,
-  formatTimeRange
-} from "@admin/lib/utils/reservationUtils";
-import { BulkApproveModal, ConfirmModal, DetailModal, RejectModal, InfoModal, Loader, Pagination, SearchBar, FilterSelectBox} from "./components";
+  BulkApproveModal,
+  ConfirmModal,
+  DetailModal,
+  RejectModal,
+  InfoModal,
+  Loader,
+  Pagination,
+  SearchBar,
+  FilterSelectBox,
+} from "./components";
 import { useReservation } from "./hooks/useReservation";
 import { getStatusStyle } from "@styles/statusStyles";
 
@@ -44,9 +51,9 @@ const ReservationManagementPage: React.FC = () => {
     // 페이지네이션
     uiCurrentPage,
     totalPages,
-    startPage,      
+    startPage,
     endPage,
-    handlePrevGroup, 
+    handlePrevGroup,
     handleNextGroup,
 
     // 체크박스
@@ -89,242 +96,246 @@ const ReservationManagementPage: React.FC = () => {
 
   // SelectBox2에 사용될 옵션 데이터 변환
   const statusOptions = React.useMemo(() => {
-      // '예약 상태 전체' 옵션을 추가
-      return [
-          { label: "예약 상태 전체", value: "" },
-          ...statuses.map((status) => ({
-              label: status.label,
-              value: String(status.id), // SelectBox2는 string value를 사용
-          })),
-      ];
+    // '예약 상태 전체' 옵션을 추가
+    return [
+      { label: "예약 상태 전체", value: "" },
+      ...statuses.map((status) => ({
+        label: status.label,
+        value: String(status.id), // SelectBox2는 string value를 사용
+      })),
+    ];
   }, [statuses]);
 
   const regionOptions = React.useMemo(() => {
-      // '지점' 옵션을 추가
-      return [
-          { label: "지점", value: "" },
-          ...regions.map((region) => ({
-              label: region.regionName,
-              value: String(region.regionId), // SelectBox2는 string value를 사용
-          })),
-      ];
+    // '지점' 옵션을 추가
+    return [
+      { label: "지점", value: "" },
+      ...regions.map((region) => ({
+        label: region.regionName,
+        value: String(region.regionId), // SelectBox2는 string value를 사용
+      })),
+    ];
   }, [regions]);
 
-
-return (
+  return (
     <MainContainer>
       <Loader>
-      <Header>
-        <PageTitle>예약 관리</PageTitle>
-      </Header>
-      <SectionTitle>예약 목록</SectionTitle>
+        <Header>
+          <PageTitle>예약 관리</PageTitle>
+        </Header>
+        <SectionTitle>예약 목록</SectionTitle>
 
-      {/* Filter and Search Section (Responsive) */}
-      <FilterSearchWrapper>
-        {/* 예약 상태 드롭다운 */}
-        <FilterSelectBox
-          options={statusOptions}
-          value={selectedStatusId ? String(selectedStatusId) : ""} 
-          onChange={(value) => handleFilterChange("status", value)}
+        {/* Filter and Search Section (Responsive) */}
+        <FilterSearchWrapper>
+          {/* 예약 상태 드롭다운 */}
+          <FilterSelectBox
+            options={statusOptions}
+            value={selectedStatusId ? String(selectedStatusId) : ""}
+            onChange={(value) => handleFilterChange("status", value)}
+          />
+
+          {/* 지점 드롭 다운은 2차 승인자, master만 적용 */}
+          {adminRoleId === 0 || adminRoleId === 1 ? (
+            <FilterSelectBox
+              options={regionOptions}
+              value={selectedRegionId ? String(selectedRegionId) : ""}
+              onChange={(value) => handleFilterChange("region", value)}
+            />
+          ) : null}
+          <SearchBarWrapper>
+            <SearchBar
+              placeholder="예약자명 또는 공간명을 검색하세요."
+              searchValue={keyword}
+              onSearchChange={handleKeywordChange}
+              onSearch={handleKeywordSearch}
+              isDropdownVisible={false}
+            />
+          </SearchBarWrapper>
+
+          <ActionButtons>
+            {flags.map((flag) => (
+              // 신한 예약 보기 / 긴급 예약 보기 Flag
+              <FilterButton
+                key={flag.key}
+                // 훅의 핸들러 사용
+                onClick={() =>
+                  handleFlagToggle(flag.key as "isShinhan" | "isEmergency")
+                }
+                isActive={flag.key === "isShinhan" ? isShinhan : isEmergency}
+              >
+                {flag.label}
+              </FilterButton>
+            ))}
+          </ActionButtons>
+        </FilterSearchWrapper>
+
+        {/* Table Header and Actions (Responsive) */}
+        <HeaderActions>
+          <SelectAllContainer htmlFor="selectAllCheckbox">
+            <HiddenCheckbox
+              type="checkbox"
+              id="selectAllCheckbox"
+              // 훅에서 계산된 상태 사용
+              checked={isAllApprovableSelected}
+              // 훅의 핸들러 사용 (event 인수는 필요 없도록 훅에서 처리)
+              onChange={handleSelectAll}
+            />
+            <CustomCheckbox isChecked={isAllApprovableSelected}>
+              {isAllApprovableSelected && <IoCheckmarkSharp size={16} />}
+            </CustomCheckbox>
+            <SelectAllText>전체 선택</SelectAllText>
+          </SelectAllContainer>
+          <ApproveAllButton onClick={handleApproveSelected}>
+            선택 승인
+          </ApproveAllButton>
+        </HeaderActions>
+
+        {/* Reservation List (Responsive) */}
+        <ReservationList>
+          {reservations.map((reservation) => (
+            <ReservationItem key={reservation.reservationId}>
+              <ThumbContainer>
+                <SelectAllContainer
+                  htmlFor={`checkbox-${reservation.reservationId}`}
+                >
+                  <HiddenCheckbox
+                    type="checkbox"
+                    id={`checkbox-${reservation.reservationId}`}
+                    checked={selectedItems.includes(reservation.reservationId)}
+                    // 훅의 핸들러 사용
+                    onChange={() =>
+                      handleSingleSelect(
+                        reservation.reservationId,
+                        reservation.isApprovable
+                      )
+                    }
+                    disabled={!reservation.isApprovable}
+                  />
+                  <CustomCheckbox
+                    isChecked={selectedItems.includes(
+                      reservation.reservationId
+                    )}
+                  >
+                    {selectedItems.includes(reservation.reservationId) && (
+                      <IoCheckmarkSharp size={16} />
+                    )}
+                  </CustomCheckbox>
+                </SelectAllContainer>
+              </ThumbContainer>
+              <ReservationInfo>
+                <InfoRow>
+                  <StatusBadge $statusId={reservation.statusId}>
+                    {reservation.reservationStatusName}
+                  </StatusBadge>
+                  <SpaceNameCls>{reservation.spaceName}</SpaceNameCls>
+                  <SubTextCls>예약자명 : {reservation.userName}</SubTextCls>
+                  {reservation.isShinhan && <ShinhanTag>신한</ShinhanTag>}
+                  {reservation.isEmergency && <EmergencyTag>긴급</EmergencyTag>}
+                </InfoRow>
+                <DetailInfo>
+                  <DetailItem>
+                    <DateText>
+                      {formatDate(reservation.reservationFrom)}
+                    </DateText>
+                  </DetailItem>
+                  <DetailItem>
+                    <DateText>{"|"}</DateText>
+                  </DetailItem>
+                  <DetailItem>
+                    <DateText>
+                      {formatTimeRange(
+                        reservation.reservationFrom,
+                        reservation.reservationTo
+                      )}
+                    </DateText>
+                  </DetailItem>
+                  {reservation.previsits &&
+                    reservation.previsits.length > 0 && (
+                      <>
+                        <DetailItem>
+                          <span>
+                            사전답사{" "}
+                            {formatDate(reservation.previsits[0]?.previsitFrom)}
+                          </span>
+                        </DetailItem>
+                        <DetailItem>
+                          <span>{"|"}</span>
+                        </DetailItem>
+                        <DetailItem>
+                          <span>
+                            {formatTimeRange(
+                              reservation.previsits[0]?.previsitFrom,
+                              reservation.previsits[0]?.previsitTo
+                            )}
+                          </span>
+                        </DetailItem>
+                      </>
+                    )}
+                </DetailInfo>
+              </ReservationInfo>
+              <ItemActions>
+                <DetailButton
+                  onClick={() => handleDetailClick(reservation.reservationId)}
+                >
+                  상세 보기
+                </DetailButton>
+                {/* 승인하기 버튼 - isApprovable 값에 따라 비활성화 */}
+                <ApproveActionButton
+                  disabled={!reservation.isApprovable}
+                  onClick={() => handleApprove(reservation.reservationId)} // 훅의 핸들러 호출
+                >
+                  승인하기
+                </ApproveActionButton>
+                {/* 반려하기 버튼 - isRejectable 값에 따라 비활성화 */}
+                <RejectActionButton
+                  disabled={!reservation.isRejectable}
+                  onClick={() => handleReject(reservation.reservationId)} // 훅의 핸들러 호출
+                >
+                  반려하기
+                </RejectActionButton>
+              </ItemActions>
+            </ReservationItem>
+          ))}
+        </ReservationList>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={uiCurrentPage}
+          totalPages={totalPages}
+          startPage={startPage}
+          endPage={endPage}
+          onPageChange={handlePageChange}
+          onPrevGroup={handlePrevGroup}
+          onNextGroup={handleNextGroup}
         />
 
-        {/* 지점 드롭 다운은 2차 승인자, master만 적용 */}
-        {adminRoleId === 0 || adminRoleId === 1 ? (
-          <FilterSelectBox
-            options={regionOptions}
-            value={selectedRegionId ? String(selectedRegionId) : ""} 
-            onChange={(value) => handleFilterChange("region", value)}
-          />
-        ) : null}
-        <SearchBarWrapper>
-          <SearchBar
-            placeholder="예약자명 또는 공간명을 검색하세요."
-            searchValue={keyword}
-            onSearchChange={handleKeywordChange}
-            onSearch={handleKeywordSearch}
-            isDropdownVisible={false}
-          />
-        </SearchBarWrapper>
-
-        <ActionButtons>
-          {flags.map((flag) => (
-            // 신한 예약 보기 / 긴급 예약 보기 Flag
-            <FilterButton
-              key={flag.key}
-              // 훅의 핸들러 사용
-              onClick={() => handleFlagToggle(flag.key as 'isShinhan' | 'isEmergency')}
-              isActive={flag.key === "isShinhan" ? isShinhan : isEmergency}
-            >
-              {flag.label}
-            </FilterButton>
-          ))}
-        </ActionButtons>
-      </FilterSearchWrapper>
-
-      {/* Table Header and Actions (Responsive) */}
-      <HeaderActions>
-        <SelectAllContainer htmlFor="selectAllCheckbox">
-          <HiddenCheckbox
-            type="checkbox"
-            id="selectAllCheckbox"
-            // 훅에서 계산된 상태 사용
-            checked={isAllApprovableSelected}
-            // 훅의 핸들러 사용 (event 인수는 필요 없도록 훅에서 처리)
-            onChange={handleSelectAll}
-          />
-          <CustomCheckbox isChecked={isAllApprovableSelected}>
-            {isAllApprovableSelected && <IoCheckmarkSharp size={16} />}
-          </CustomCheckbox>
-          <SelectAllText>전체 선택</SelectAllText>
-        </SelectAllContainer>
-        <ApproveAllButton onClick={handleApproveSelected}>
-          선택 승인
-        </ApproveAllButton>
-      </HeaderActions>
-
-      {/* Reservation List (Responsive) */}
-      <ReservationList>
-        {reservations.map((reservation) => (
-          <ReservationItem key={reservation.reservationId}>
-            <ThumbContainer>
-              <SelectAllContainer
-                htmlFor={`checkbox-${reservation.reservationId}`}
-              >
-                <HiddenCheckbox
-                  type="checkbox"
-                  id={`checkbox-${reservation.reservationId}`}
-                  checked={selectedItems.includes(reservation.reservationId)}
-                  // 훅의 핸들러 사용
-                  onChange={() =>
-                    handleSingleSelect(
-                      reservation.reservationId,
-                      reservation.isApprovable
-                    )
-                  }
-                  disabled={!reservation.isApprovable}
-                />
-                <CustomCheckbox
-                  isChecked={selectedItems.includes(reservation.reservationId)}
-                >
-                  {selectedItems.includes(reservation.reservationId) && (
-                    <IoCheckmarkSharp size={16} />
-                  )}
-                </CustomCheckbox>
-              </SelectAllContainer>
-            </ThumbContainer>
-            <ReservationInfo>
-              <InfoRow>
-                <StatusBadge $statusId={reservation.statusId}>{reservation.reservationStatusName}</StatusBadge>
-                <SpaceNameCls>
-                  {reservation.spaceName}
-                </SpaceNameCls>
-                <SubTextCls>
-                  예약자명 : {reservation.userName}
-                </SubTextCls>
-                {reservation.isShinhan && <ShinhanTag>신한</ShinhanTag>}
-                {reservation.isEmergency && <EmergencyTag>긴급</EmergencyTag>}
-              </InfoRow>
-              <DetailInfo>
-                <DetailItem>
-                  <DateText>{formatDate(reservation.reservationFrom)}</DateText>
-                </DetailItem>
-                <DetailItem>
-                  <DateText>{"|"}</DateText>
-                </DetailItem>
-                <DetailItem>
-                  <DateText>
-                    {formatTimeRange(
-                      reservation.reservationFrom,
-                      reservation.reservationTo
-                    )}
-                  </DateText>
-                </DetailItem>
-                {reservation.previsits && reservation.previsits.length > 0 && (
-                  <>
-                    <DetailItem>
-                      <span>
-                        사전답사{" "}
-                        {formatDate(reservation.previsits[0]?.previsitFrom)}
-                      </span>
-                    </DetailItem>
-                    <DetailItem>
-                      <span>{"|"}</span>
-                    </DetailItem>
-                    <DetailItem>
-                      <span>
-                        {formatTimeRange(
-                          reservation.previsits[0]?.previsitFrom,
-                          reservation.previsits[0]?.previsitTo
-                        )}
-                      </span>
-                    </DetailItem>
-                  </>
-                )}
-              </DetailInfo>
-            </ReservationInfo>
-            <ItemActions>
-              <DetailButton
-                onClick={() => handleDetailClick(reservation.reservationId)}
-              >
-                상세 보기
-              </DetailButton>
-              {/* 승인하기 버튼 - isApprovable 값에 따라 비활성화 */}
-              <ApproveActionButton
-                disabled={!reservation.isApprovable}
-                onClick={() => handleApprove(reservation.reservationId)} // 훅의 핸들러 호출
-              >
-                승인하기
-              </ApproveActionButton>
-              {/* 반려하기 버튼 - isRejectable 값에 따라 비활성화 */}
-              <RejectActionButton
-                disabled={!reservation.isRejectable}
-                onClick={() => handleReject(reservation.reservationId)} // 훅의 핸들러 호출
-              >
-                반려하기
-              </RejectActionButton>
-            </ItemActions>
-          </ReservationItem>
-        ))}
-      </ReservationList>
-
-      {/* Pagination */}
-      <Pagination
-      currentPage={uiCurrentPage}
-      totalPages={totalPages}
-      startPage={startPage}
-      endPage={endPage}
-      onPageChange={handlePageChange}
-      onPrevGroup={handlePrevGroup}
-      onNextGroup={handleNextGroup}
-    />
-
-      {/* InfoModal(알림) 컴포넌트 */}
-      <InfoModal/>
-      {/* 단건 승인 확인용 ConfirmModal */}
-      <ConfirmModal/>
-      {/* 일괄승인 모달 */}
-      <BulkApproveModal
-        isOpen={isBulkConfirmModalOpen} // 훅의 상태 사용
-        reservations={reservationsToApprove} // 훅의 상태 사용
-        onConfirm={confirmBulkApprove} // 훅의 핸들러 사용
-        onCancel={handleBulkConfirmModalClose}
-      />
-      {/* 반려하기 모달 */}
-      <RejectModal
-        isOpen={isRejectModalOpen}
-        onClose={handleRejectModalClose} // 훅의 닫기 핸들러 사용
-        onConfirm={confirmReject} // 훅의 최종 확정 핸들러 사용
-        rejectionReason={rejectionReason} // 훅의 상태 사용
-        setRejectionReason={handleRejectionReasonChange} // 훅의 핸들러 사용
-      />
-      {/* 상세 보기 모달 */}
-      <DetailModal
-        isOpen={isDetailModalOpen} // 훅의 상태 사용
-        onClose={handleDetailModalClose} // 훅의 닫기 핸들러 사용
-        onApproveClick={handleApprove}
-        onRejectClick={handleReject}
-        reservationId={selectedReservationForDetail} // 훅의 상태 사용
-      />
+        {/* InfoModal(알림) 컴포넌트 */}
+        <InfoModal />
+        {/* 단건 승인 확인용 ConfirmModal */}
+        <ConfirmModal />
+        {/* 일괄승인 모달 */}
+        <BulkApproveModal
+          isOpen={isBulkConfirmModalOpen} // 훅의 상태 사용
+          reservations={reservationsToApprove} // 훅의 상태 사용
+          onConfirm={confirmBulkApprove} // 훅의 핸들러 사용
+          onCancel={handleBulkConfirmModalClose}
+        />
+        {/* 반려하기 모달 */}
+        <RejectModal
+          isOpen={isRejectModalOpen}
+          onClose={handleRejectModalClose} // 훅의 닫기 핸들러 사용
+          onConfirm={confirmReject} // 훅의 최종 확정 핸들러 사용
+          rejectionReason={rejectionReason} // 훅의 상태 사용
+          setRejectionReason={handleRejectionReasonChange} // 훅의 핸들러 사용
+        />
+        {/* 상세 보기 모달 */}
+        <DetailModal
+          isOpen={isDetailModalOpen} // 훅의 상태 사용
+          onClose={handleDetailModalClose} // 훅의 닫기 핸들러 사용
+          onApproveClick={handleApprove}
+          onRejectClick={handleReject}
+          reservationId={selectedReservationForDetail} // 훅의 상태 사용
+        />
       </Loader>
     </MainContainer>
   );
@@ -345,9 +356,7 @@ const SubTextCls = styled.span`
 
 const MainContainer = styled.main`
   flex: 1;
-  padding: 1rem;
   @media (min-width: 768px) {
-    padding: 2rem;
   }
 `;
 
@@ -364,14 +373,10 @@ const Header = styled.div`
 `;
 
 const PageTitle = styled.h1`
-  /* 피그마 CSS 기반 스타일 적용 */
-  font-family: "Pretendard";
-  font-style: normal;
-  font-weight: 600;
-  font-size: 24px;
-  line-height: 29px;
-  letter-spacing: -0.011em;
-  color: #000000;
+  .h1 {
+    font-weight: 600;
+    font-size: 1.5rem;
+  }
 
   /* 기존 스타일 유지 및 일부 조정 */
   margin-bottom: 1rem;
