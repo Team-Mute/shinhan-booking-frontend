@@ -15,15 +15,29 @@ interface ReservCalendarProps {
   availableDays?: number[];
 }
 
+/**
+ * ReservationCalendar 컴포넌트
+ * ----------------------------
+ * - 단일 날짜 또는 기간 선택 가능
+ * - 월별 달력 UI 제공
+ * - 오늘, 선택, 비활성 날짜 표시
+ *
+ * Props:
+ * - selectsRange: 기간 선택 여부 (기본 true)
+ * - onSelectDate: 날짜 선택 이벤트
+ * - selectedStart / selectedEnd: 외부에서 선택 상태 제어
+ * - onMonthChange: 월 변경 이벤트
+ * - availableDays: 선택 가능한 날짜 배열
+ */
 export default function ReservationCalendar({
-  selectsRange = true, // ✅ [수정] 기본값을 true로 설정하여 기간 선택을 기본 활성화
+  selectsRange = true,
   onSelectDate,
   selectedStart: externalStart,
   selectedEnd: externalEnd,
   onMonthChange,
   availableDays,
 }: ReservCalendarProps) {
-  // 모든 비교를 위해 오늘 날짜를 UTC 0시로 통일하여 생성
+  // 오늘 날짜를 UTC 0시로 통일
   const getUTCTodayZero = () => {
     const now = new Date();
     const y = now.getFullYear();
@@ -33,34 +47,28 @@ export default function ReservationCalendar({
   };
 
   const todayZero = getUTCTodayZero();
-  const today = new Date(); // 순수한 오늘 날짜 (isTodayCheck 용)
+  const today = new Date(); // 실제 오늘 날짜
 
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
-  // --------------------------------------------------------------------------
-  // 1. 월 변경 시 API 호출
-  // --------------------------------------------------------------------------
+  // 월 변경 시 onMonthChange 호출
   useEffect(() => {
     if (onMonthChange) {
       onMonthChange(currentYear, currentMonth + 1);
     }
   }, [currentYear, currentMonth, onMonthChange]);
 
-  // --------------------------------------------------------------------------
-  // 2. 외부 시작일이 주어졌을 때, 해당 월로 캘린더를 이동 (최초 로드 시에만)
-  // --------------------------------------------------------------------------
+  // 외부 시작일이 있을 경우, 해당 월로 이동 (최초 로드 시)
   useEffect(() => {
-    // ✅ [로직 개선] externalStart가 Date 객체인 경우에만 실행
     if (externalStart && externalStart instanceof Date && isInitialLoad) {
       setCurrentYear(externalStart.getFullYear());
       setCurrentMonth(externalStart.getMonth());
       setIsInitialLoad(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [externalStart]); // isInitialLoad 제거, externalStart 변경 시 실행하도록
+  }, [externalStart]);
 
   /**
    * @description 이전/다음 달 이동
@@ -99,30 +107,23 @@ export default function ReservationCalendar({
 
   const days = getDaysInMonth(currentYear, currentMonth);
 
-  /**
-   * ✅ 두 날짜 객체가 년/월/일 기준으로 같은지 확인 (UTC 시간대 문제 해결)
-   */
+  // 두 날짜가 같은지 비교 (년/월/일 기준)
   const isSameDay = (
     a: Date | null | undefined,
     b: Date | null | undefined
   ) => {
     if (!a || !b) return false;
 
-    // 두 날짜의 년/월/일을 UTC 기준으로 통일하여 비교 (UTC 0시 0분 0초 타임스탬프)
     const dateA = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
     const dateB = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
 
     return dateA === dateB;
   };
 
-  /**
-   * @description 날짜가 선택된 기간(externalStart ~ externalEnd) 내에 포함되는지 확인
-   */
+  // 선택된 기간 내 날짜인지 확인
   const isInRange = (date: Date) => {
-    // ✅ [수정] externalStart와 externalEnd가 모두 존재해야 기간 내 포함을 확인
     if (!externalStart || !externalEnd) return false;
 
-    // 날짜의 UTC 0시 0분 0초 타임스탬프를 기준으로 비교
     const startT = Date.UTC(
       externalStart.getFullYear(),
       externalStart.getMonth(),
@@ -139,14 +140,10 @@ export default function ReservationCalendar({
       date.getDate()
     );
 
-    // 시작일과 종료일 사이에 있고, 시작일/종료일 자체가 아닌 경우
-    // isSelected 스타일에서 시작일/종료일은 처리하므로, 여기서는 "순수하게 사이에 있는 날짜"만 확인
     return currentT > startT && currentT < endT;
   };
 
-  /**
-   * @description 날짜 클릭 이벤트를 처리하고 부모 컴포넌트에 결과를 전달 (기간 선택 로직 반영)
-   */
+  // 날짜 클릭 이벤트를 처리하고 부모 컴포넌트에 결과를 전달 (기간 선택 로직 반영)
   const handleSelect = (date: Date, isAvailable: boolean) => {
     const dateUTC = Date.UTC(
       date.getFullYear(),
@@ -157,7 +154,13 @@ export default function ReservationCalendar({
 
     if (dateUTC < todayZeroUTC || !isAvailable) return;
 
-    // --- 기간 선택 로직 시작 ---
+    // --- 단일 선택 모드 (selectsRange=false) ---
+    if (!selectsRange) {
+      // 단일 선택 모드
+      onSelectDate({ single: formatDate(date) });
+      return;
+    }
+    // --- 기간 선택 로직 시작 (selectsRange=true) ---
 
     // 1. 선택된 날짜가 없거나 (새로운 기간 선택 시작)
     // 2. 이미 기간이 완성된 경우 (externalEnd가 존재)
@@ -168,7 +171,7 @@ export default function ReservationCalendar({
       return;
     }
 
-    // 3. 시작일만 선택된 경우 (두 번째 클릭) - externalStart는 존재하고 externalEnd는 null
+    // 시작일만 선택된 경우, 두 번째 클릭
     if (externalStart && !externalEnd) {
       const startUTC = Date.UTC(
         externalStart.getFullYear(),
@@ -182,10 +185,8 @@ export default function ReservationCalendar({
       );
 
       if (dateUTC < startUTC) {
-        // 종료일 < 시작일 → 순서 변경하여 range로 전달
         onSelectDate({ range: [formatDate(date), formatDate(externalStart)] });
       } else {
-        // 정상적인 기간 선택 → range로 전달
         onSelectDate({ range: [formatDate(externalStart), formatDate(date)] });
       }
     }
@@ -203,6 +204,8 @@ export default function ReservationCalendar({
 
   return (
     <CalendarContainer>
+      {/* 헤더: 월/년 표시 + 이전/다음 버튼 */}
+
       <Header>
         <Arrow onClick={handlePrevMonth}>
           <IoIosArrowBack size={20} />
@@ -214,7 +217,7 @@ export default function ReservationCalendar({
           <IoIosArrowForward size={20} />
         </Arrow>
       </Header>
-
+      {/* 요일 표시 */}
       <Weekdays>
         {["일", "월", "화", "수", "목", "금", "토"].map((d, i) => (
           <Weekday key={d} isSunday={i === 0} isSaturday={i === 6}>
@@ -222,7 +225,7 @@ export default function ReservationCalendar({
           </Weekday>
         ))}
       </Weekdays>
-
+      {/* 날짜 그리드 */}
       <Grid>
         {days.map((dt, idx) => {
           if (!dt) return <Empty key={idx} />;
@@ -232,14 +235,10 @@ export default function ReservationCalendar({
             todayZero.getTime();
 
           const isAvailable = !!availableDays?.includes(dt.getDate());
-
           const dayIndex = dt.getDay();
           const isSunday = dayIndex === 0;
           const isSaturday = dayIndex === 6;
-
           const isTodayCheck = isSameDay(dt, today);
-
-          // ✅ [수정된 isSameDay 사용]
           const isSelected = !!(
             isSameDay(dt, externalStart) || isSameDay(dt, externalEnd)
           );
@@ -287,9 +286,6 @@ export default function ReservationCalendar({
     </CalendarContainer>
   );
 }
-
-// (Styled components 생략)
-// ...
 
 // --- styled ---
 const CalendarContainer = styled.div`

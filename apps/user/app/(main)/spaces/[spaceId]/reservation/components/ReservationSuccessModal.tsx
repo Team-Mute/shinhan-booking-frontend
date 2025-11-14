@@ -31,7 +31,13 @@ const ReservationSuccessModal = ({
           <Button width="100%" isActive={true} onClick={onConfirm}>
             내 예약 확인하기
           </Button>
-          <Button width="100%" isActive={false} onClick={onCancel}>
+          <Button
+            width="100%"
+            isActive={true}
+            color={colors.graycolor100}
+            backColor={colors.graycolor10}
+            onClick={onCancel}
+          >
             홈으로 가기
           </Button>
         </ButtonContainer>
@@ -42,6 +48,7 @@ const ReservationSuccessModal = ({
 
 export default ReservationSuccessModal;
 
+// --- styled ---
 const Overlay = styled.div`
   position: fixed;
   top: 0;

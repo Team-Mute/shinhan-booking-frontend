@@ -1,79 +1,33 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React from "react";
 import styled from "@emotion/styled";
 import colors from "@styles/theme";
-import { useReservationStore } from "@user/store/reservationStore";
-import { getAccountApi } from "@user/lib/api/user";
-import { createPrevisitApi } from "@user/lib/api/previsit";
-import { ReservPayload, ReservCreateBody } from "@user/types/reservation.dto";
-import {
-  createReservationApi,
-  getAvailableDatesApi,
-  getAvailableTimesApi,
-} from "@user/lib/api/reservation";
-import {
-  format,
-  addMinutes,
-  isBefore,
-  parse,
-  differenceInCalendarDays,
-} from "date-fns";
-import { ko } from "date-fns/locale";
 import { Checkbox, Input, Button } from "@components/index";
-import { useImgUpload } from "@user/hooks/useImgUpload";
-import { combineDateAndTime } from "@user/utils/combineDateTime";
-import Calendar from "@components/Calendar";
+import PrevisitTimeChipGroup from "./components/PrevisitTimeChipGroup";
+import ReservationSuccessModal from "./components/ReservationSuccessModal";
 import { GapBox } from "@user/components/GapBox";
-import PrevisitTimeChipGroup from "./PrevisitTimeChipGroup";
-import ReservationSuccessModal from "./ReservationSuccessModal";
-import { useRouter } from "next/navigation";
 import Loader from "@user/components/Loader";
-import { useModalStore } from "@user/store/modalStore";
+import { useRouter } from "next/navigation";
 
-// 사용자 정보 타입
-interface UserInfo {
-  userName: string;
-  userEmail: string;
-  userPhone: string;
-}
+import { useReservationConfirm } from "./hooks/useReservationConfirm";
+import ReservationCalendar from "@components/ReservationCalendar";
 
-// 30분 단위 시간 슬롯 생성 유틸리티
-const getTimeSlots = (start: string, end: string): string[] => {
-  const slots: string[] = [];
-  const startDateTime = parse(start, "HH:mm:ss", new Date());
-  const endDateTime = parse(end, "HH:mm:ss", new Date());
-
-  let currentTime = startDateTime;
-  while (
-    isBefore(currentTime, endDateTime) ||
-    currentTime.getTime() === endDateTime.getTime()
-  ) {
-    slots.push(format(currentTime, "HH:mm"));
-    currentTime = addMinutes(currentTime, 30);
-  }
-  return slots;
-};
-
+/**
+ * ReservationConfirmPage (UI)
+ * - 기존 페이지와 동일한 마크업/스타일을 유지
+ * - 모든 상태/로직은 useReservationConfirm 훅에서 분리
+ */
 export default function ReservationConfirmPage() {
   const router = useRouter();
-  const { open } = useModalStore();
-  const reservationStore = useReservationStore();
 
-  // 예약 완료 모달 상태
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-
-  // 사용자 정보
-  const [user, setUser] = useState<UserInfo | null>(null);
-
-  // 사용 목적
-  const [purpose, setPurpose] = useState("");
-
-  // 사전답사 체크 상태
-  const [isPrevisitChecked, setIsPrevisitChecked] = useState(false);
-
-  // 파일 업로드 훅
   const {
+    // data / state
+    user,
+    purpose,
+    setPurpose,
+    isPrevisitChecked,
+    setIsPrevisitChecked,
     files,
     isDragging,
     inputRef,
@@ -84,201 +38,29 @@ export default function ReservationConfirmPage() {
     onDragEnter,
     onDragLeave,
     removeAt,
-  } = useImgUpload(5);
 
-  // 사용자 정보 API 호출
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const userInfo = await getAccountApi();
-        setUser({
-          userName: userInfo.userName,
-          userEmail: userInfo.userEmail,
-          userPhone: userInfo.userPhone,
-        });
-      } catch (err) {
-        console.error("사용자 정보 로딩 실패:", err);
-      }
-    };
-    fetchUserInfo();
-  }, []);
+    reservationStore,
+    availableDates,
 
-  // 예약 가능 날짜 조회
-  const [availableDates, setAvailableDates] = useState<number[]>([]);
-  useEffect(() => {
-    if (!reservationStore.spaceId) return;
-    const baseDate = new Date();
-    const year = baseDate.getFullYear();
-    const month = baseDate.getMonth() + 1;
+    // previsit
+    amOptions,
+    pmOptions,
+    selectedPrevisitDate,
+    selectedPrevisitTime,
+    setSelectedPrevisitTime,
 
-    getAvailableDatesApi(Number(reservationStore.spaceId), year, month)
-      .then((res) => setAvailableDates(res.availableDays))
-      .catch((err) => console.error(err));
-  }, [reservationStore.startDate]);
+    // display
+    dateText,
+    timeText,
 
-  // 예약 요청 핸들러
-  const handleSubmit = async () => {
-    if (purpose.trim() === "") {
-      open("입력 오류", "사용 목적을 입력해주세요.");
-      return;
-    }
+    // control
+    handleMonthChange,
+    handleSelectPrevisitDate,
+    handleSubmit,
 
-    try {
-      // 예약 요청 데이터 생성
-      const reservationPayload: ReservPayload = {
-        spaceId: reservationStore.spaceId || 0,
-        reservationHeadcount: reservationStore.capacity || 0,
-        reservationFrom:
-          combineDateAndTime(
-            reservationStore.startDate,
-            reservationStore.time?.start,
-            "start"
-          ) ?? "",
-        reservationTo:
-          combineDateAndTime(
-            reservationStore.endDate || reservationStore.startDate,
-            reservationStore.time?.end,
-            "end"
-          ) ?? "",
-        reservationPurpose: purpose,
-        reservationAttachments: [],
-        previsitInfo:
-          isPrevisitChecked && selectedPrevisitDate && selectedPrevisitTime
-            ? {
-                previsitFrom: combineDateAndTime(
-                  selectedPrevisitDate,
-                  selectedPrevisitTime,
-                  "start"
-                )!,
-                previsitTo: combineDateAndTime(
-                  selectedPrevisitDate,
-                  format(
-                    addMinutes(
-                      parse(selectedPrevisitTime, "HH:mm", new Date()),
-                      30
-                    ),
-                    "HH:mm"
-                  ),
-                  "end"
-                )!,
-              }
-            : null,
-      };
-
-      const request: ReservCreateBody = {
-        requestDto: reservationPayload,
-        files: files,
-      };
-
-      // 예약 생성 API 호출
-      const reservationResponse = await createReservationApi(request);
-      const reservationId = reservationResponse.reservationId;
-
-      // 사전답사 예약 여부 확인
-      let previsitSuccess = false;
-      if (isPrevisitChecked && selectedPrevisitDate && selectedPrevisitTime) {
-        const previsitFromTime = selectedPrevisitTime;
-        const [hour, minute] = previsitFromTime.split(":").map(Number);
-        const previsitDate = new Date(selectedPrevisitDate);
-        previsitDate.setHours(hour, minute, 0, 0);
-        const previsitToDate = addMinutes(previsitDate, 30);
-
-        const previsitFrom = format(previsitDate, "yyyy-MM-dd'T'HH:mm:ss");
-        const previsitTo = format(previsitToDate, "yyyy-MM-dd'T'HH:mm:ss");
-
-        await createPrevisitApi(reservationId, previsitFrom, previsitTo);
-        previsitSuccess = true;
-      }
-
-      setIsSuccessModalOpen(true);
-    } catch (err) {
-      console.error("예약 생성 실패:", err);
-      open("예약 실패", "예약에 실패했습니다. 다시 시도해주세요.");
-    }
-  };
-
-  // 이용 날짜/시간 표시 텍스트
-  const getReservationDisplay = () => {
-    const { startDate, endDate, time } = reservationStore;
-    if (!startDate || !time?.start || !time?.end)
-      return { dateText: "", timeText: "" };
-
-    // 하루 예약
-    if (!(time.start === "00:00" && time.end === "23:59")) {
-      const dateText = format(startDate, "yyyy년 MM월 dd일 EEEE", {
-        locale: ko,
-      });
-      const [startHour, startMin] = time.start.split(":").map(Number);
-      const [endHour, endMin] = time.end.split(":").map(Number);
-      const diffMinutes = endHour * 60 + endMin - (startHour * 60 + startMin);
-      const hours = Math.floor(diffMinutes / 60);
-      const minutes = diffMinutes % 60;
-      const timeText = `${time.start}~${time.end}, ${hours}시간${
-        minutes > 0 ? ` ${minutes}분` : ""
-      }`;
-      return { dateText, timeText };
-    }
-
-    // 기간 예약
-    const end = reservationStore.endDate || startDate;
-    const dateText =
-      format(startDate, "yyyy년 MM월 dd일 EEEE", { locale: ko }) +
-      " ~ " +
-      format(end, "yyyy년 MM월 dd일 EEEE", { locale: ko });
-    const durationDays = differenceInCalendarDays(end, startDate) + 1;
-    const timeText = `${durationDays}일`;
-    return { dateText, timeText };
-  };
-
-  const { dateText, timeText } = getReservationDisplay();
-
-  // 사전답사 관련 상태
-  const [selectedPrevisitDate, setSelectedPrevisitDate] = useState<Date | null>(
-    null
-  );
-  const [availablePrevisitTimes, setAvailablePrevisitTimes] = useState<
-    { startTime: string; endTime: string }[]
-  >([]);
-  const [selectedPrevisitTime, setSelectedPrevisitTime] = useState("");
-
-  // 사전답사 날짜 선택
-  const handleSelectDate = async (result: {
-    single?: string;
-    range?: [string, string];
-  }) => {
-    if (!reservationStore.spaceId) return;
-    if (!result.single) return;
-
-    const [year, month, day] = result.single.split(":").map(Number);
-    const dateObject = new Date(year, month - 1, day);
-    setSelectedPrevisitDate(dateObject);
-
-    const res = await getAvailableTimesApi(
-      reservationStore.spaceId,
-      year,
-      month,
-      day
-    );
-    setAvailablePrevisitTimes(res.availableTimes);
-    setSelectedPrevisitTime("");
-  };
-
-  // 오전/오후 시간대 분리
-  const { amOptions, pmOptions } = useMemo(() => {
-    const allSlots: string[] = [];
-    availablePrevisitTimes.forEach((slot) => {
-      allSlots.push(...getTimeSlots(slot.startTime, slot.endTime));
-    });
-
-    const amSlots = allSlots.filter(
-      (slot) => parseInt(slot.split(":")[0]) < 12
-    );
-    const pmSlots = allSlots.filter(
-      (slot) => parseInt(slot.split(":")[0]) >= 12
-    );
-
-    return { amOptions: amSlots, pmOptions: pmSlots };
-  }, [availablePrevisitTimes]);
+    isSuccessModalOpen,
+    setIsSuccessModalOpen,
+  } = useReservationConfirm();
 
   return (
     <Wrapper>
@@ -288,6 +70,7 @@ export default function ReservationConfirmPage() {
           {/* 왼쪽 영역: 예약자 정보 입력 */}
           <ReservationForm>
             <SubTitle>예약자 정보</SubTitle>
+
             <FormGroup>
               <Label htmlFor="name">예약자 이름</Label>
               <Input
@@ -297,6 +80,7 @@ export default function ReservationConfirmPage() {
                 disabled
               />
             </FormGroup>
+
             <FormGroup>
               <Label htmlFor="email">이메일</Label>
               <Input
@@ -337,33 +121,14 @@ export default function ReservationConfirmPage() {
 
               {isPrevisitChecked && (
                 <HiddenComponent>
-                  <Calendar
-                    selectedDate={reservationStore.startDate}
-                    availableDates={availableDates}
-                    onSelectDate={handleSelectDate}
-                    onMonthChange={(year, month) => {
-                      getAvailableDatesApi(
-                        Number(reservationStore.spaceId),
-                        year,
-                        month
-                      )
-                        .then((res) => setAvailableDates(res.availableDays))
-                        .catch((err) => console.error(err));
-                    }}
+                  <ReservationCalendar
+                    selectsRange={false}
+                    selectedEnd={selectedPrevisitDate}
+                    selectedStart={selectedPrevisitDate}
+                    availableDays={availableDates}
+                    onSelectDate={handleSelectPrevisitDate}
+                    onMonthChange={handleMonthChange}
                   />
-
-                  <InfoWrapper>
-                    <InfoBox>
-                      <Info color={colors.graycolor20}>
-                        <div></div>
-                        <p>오늘</p>
-                      </Info>
-                      <Info color={colors.maincolor}>
-                        <div></div>
-                        <p>선택</p>
-                      </Info>
-                    </InfoBox>
-                  </InfoWrapper>
 
                   {/* 오전/오후 시간 선택 */}
                   <TimeBox>
@@ -376,7 +141,9 @@ export default function ReservationConfirmPage() {
                         onToggle={setSelectedPrevisitTime}
                       />
                     </AM>
+
                     <GapBox h="1rem" />
+
                     <PM>
                       <span>오후</span>
                       <GapBox h="1rem" />
@@ -450,18 +217,22 @@ export default function ReservationConfirmPage() {
                   <SpaceInfoText>{reservationStore.spaceName}</SpaceInfoText>
                 </InfoValue>
               </InfoItem>
+
               <InfoItem>
                 <InfoLabel>이용날짜</InfoLabel>
                 <InfoValue>{dateText}</InfoValue>
               </InfoItem>
+
               <InfoItem>
                 <InfoLabel>이용시간</InfoLabel>
                 <InfoValue>{timeText}</InfoValue>
               </InfoItem>
+
               <InfoItem>
                 <InfoLabel>이용인원</InfoLabel>
                 <InfoValue>{reservationStore.capacity || 0}명</InfoValue>
               </InfoItem>
+
               <Button
                 type="button"
                 isActive
@@ -478,8 +249,8 @@ export default function ReservationConfirmPage() {
         <ReservationSuccessModal
           isOpen={isSuccessModalOpen}
           title="예약 요청이 완료되었습니다"
-          subtitle="예약은 평균 10분 이내에 확정돼요.
-        나의 예약 현황은 마이페이지에서 확인할 수 있습니다."
+          subtitle={`예약은 평균 10분 이내에 확정돼요.
+나의 예약 현황은 마이페이지에서 확인할 수 있습니다.`}
           onConfirm={() => {
             setIsSuccessModalOpen(false);
             router.push("/mypage/reservations");
@@ -494,6 +265,7 @@ export default function ReservationConfirmPage() {
   );
 }
 
+// --- styled ---
 const Wrapper = styled.div`
   max-width: 1200px;
   margin: 0 auto;
