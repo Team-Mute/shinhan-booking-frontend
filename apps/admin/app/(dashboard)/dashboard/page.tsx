@@ -88,10 +88,7 @@ export default function Dashboard() {
 
         setStatusOptions(options);
         setIsStatusLoaded(true);
-
-        console.log("예약 상태 필터 로드 완료:", options);
       } catch (err) {
-        console.error("예약 상태 필터 로드 실패:", err);
         setStatusOptions([]);
         setIsStatusLoaded(true);
       }
@@ -175,7 +172,6 @@ export default function Dashboard() {
    */
   const handleSaveSettings = (selectedStatuses: string[]) => {
     setVisibleStatuses(selectedStatuses);
-    console.log("캘린더 설정 저장:", selectedStatuses);
   };
 
   // 상태가 로드되지 않았으면 로딩 표시

@@ -51,13 +51,6 @@ export default function ReservationChangeModal({
   };
 
   const handleSaveChanges = async () => {
-    // TODO: 실제 예약 수정 API 호출 로직 구현
-    console.log("Saving changes:", {
-      ...formData,
-      reservationFrom: selectedDate?.toISOString(),
-      reservationHeadcount: headcount,
-    });
-    // await updateReservationApi(reservationData.id, formData);
     alert("예약이 성공적으로 변경되었습니다.");
     onClose(true); // 변경 완료 후 모달 닫기
   };

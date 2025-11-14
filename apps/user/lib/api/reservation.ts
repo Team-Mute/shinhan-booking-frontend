@@ -74,7 +74,7 @@ export async function createReservationApi({
 
   // 서버가 기대하는 "requestDto"라는 이름으로 Blob 객체를 추가합니다.
   formData.append("requestDto", jsonBlob);
-  console.log(jsonBlob);
+
   // *************************************// 파일이 있을 경우에만 'files' 파트를 추가합니다.
   if (files && files.length > 0) {
     files.forEach((file) => {

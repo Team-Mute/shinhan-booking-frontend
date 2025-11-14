@@ -27,11 +27,9 @@ export function useResetPassword() {
 
   const handleResetPW = async () => {
     try {
-      console.log("handleResetPW called");
       const { status } = await resetPasswordApi({ userEmail: email });
 
       if (status === 200) {
-        console.log("success 200");
         open(
           "안내",
           "임시 비밀번호가 발송되었습니다.\n다시 로그인해주세요.",

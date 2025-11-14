@@ -5,16 +5,21 @@ type ReservationTime = {
   end: string | undefined;
 };
 
+// --- 필터 상태 타입 정의 ---
+// 사용자가 검색 페이지에서 선택한 필터 조건을 저장
 type FilterStore = {
-  regionId: number | undefined;
-  capacity: number | undefined;
-  startDate: string | undefined;
-  endDate: string | undefined;
-  time: ReservationTime | undefined;
+  regionId: number | undefined; // 선택된 지역 ID
+  capacity: number | undefined; // 선택된 인원 수
+  startDate: string | undefined; // 선택된 시작 날짜 (YYYY-MM-DD)
+  endDate: string | undefined; // 선택된 종료 날짜 (YYYY-MM-DD)
+  time: ReservationTime | undefined; // 선택된 시간 범위
 
-  tagNames: string[] | undefined;
+  tagNames: string[] | undefined; // 선택된 태그 배열
 
+  // 필터 상태 업데이트 함수
   setFilters: (filters: Partial<FilterStore>) => void;
+
+  // 필터 상태 초기화 함수
   clearFilters: () => void;
 };
 
@@ -28,15 +33,7 @@ export const useFilterStore = create<FilterStore>((set) => ({
 
   setFilters: (filters) =>
     set((state) => {
-      // 1. 갱신될 내용을 콘솔에 출력
-      console.log("🚀 [FilterStore] New Filters Applied:", filters);
-
-      // 2. 새로운 상태를 계산
       const newState = { ...state, ...filters };
-
-      // 3. 최종 상태를 콘솔에 출력
-      console.log("✅ [FilterStore] Current State:", newState);
-
       // 4. 상태 업데이트
       return newState;
     }),
