@@ -310,9 +310,10 @@ const ReservationForm = styled.div`
   width: 22rem;
 
   @media (max-width: 768px) {
-    width: 100%; 
-    margin-bottom: 2rem; 
+    width: 100%;
+    margin-bottom: 2rem;
     order: 2; // 모바일에서 두 번째 순서
+    margin-top: 2rem;
   }
 `;
 
@@ -350,7 +351,7 @@ const SmallText = styled.span`
 const ReservationInfoSection = styled.div`
   width: 24rem;
   border: 1px solid ${colors.graycolor10};
-  border-radius: 0.75rem; 
+  border-radius: 0.75rem;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -358,7 +359,7 @@ const ReservationInfoSection = styled.div`
   @media (max-width: 768px) {
     width: 100%;
     padding: 1rem;
-    // 모바일일 경우: border, border-radius 제거 
+    // 모바일일 경우: border, border-radius 제거
     border: none; // 테두리 제거
     border-radius: 0; // 모서리 둥글기 제거
   }
