@@ -40,9 +40,9 @@ export default function HeaderMobile() {
 
         {/* 햄버거 메뉴 버튼 (토큰 있을 때만 활성화) */}
         <HamburgerButton
-          onClick={() => accessToken && setMenuOpen(true)} // 토큰 있을 때만 메뉴 열림
-          disabled={!accessToken} // 토큰 없으면 버튼 비활성화
-          hidden={!accessToken} // 토큰 없으면 버튼 숨김
+          onClick={() => setMenuOpen(true)} // 메뉴 열림
+          disabled={false}
+          hidden={false}
         >
           <HamburgerIcon src="/icons/threeline.svg" alt="메뉴" />
         </HamburgerButton>
@@ -167,14 +167,4 @@ const MenuLink = styled.div`
 const HamburgerIcon = styled.img`
   width: 24px;
   height: 24px;
-`;
-
-const IconWrapper = styled.span`
-  display: flex;
-  margin-right: 1rem;
-
-  svg {
-    width: 100%;
-    height: 100%;
-  }
 `;
