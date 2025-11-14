@@ -175,9 +175,11 @@ export default function HomePage() {
         {eventHallList.length != 0 && (
           <EventHallWrapper>
             <CategoryTitle>행사장</CategoryTitle>
-            {eventHallList.map((hall) => (
-              <SpaceInfoCard key={hall.spaceId} {...hall} />
-            ))}
+            <Grid>
+              {eventHallList.map((hall) => (
+                <SpaceInfoCard key={hall.spaceId} {...hall} />
+              ))}
+            </Grid>
           </EventHallWrapper>
         )}
 
