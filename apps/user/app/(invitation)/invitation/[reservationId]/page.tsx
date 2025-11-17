@@ -3,7 +3,7 @@
 import React from "react";
 import styled from "@emotion/styled";
 import { useParams } from "next/navigation";
-import { useInvitation } from "@user/hooks/useInvitation";
+import { useInvitation } from "@user/app/(invitation)/invitation/[reservationId]/hooks/useInvitation";
 import { formatReservationPeriod } from "@user/utils/invitationDateTime";
 
 export default function InvitationPage() {
