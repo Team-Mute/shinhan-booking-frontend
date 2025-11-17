@@ -46,7 +46,6 @@ export function useSignup() {
     try {
       const response = await signUpApi({
         userName: name,
-        userPhone: "", // 아직 입력 전이므로 공백
         userEmail: email,
         userPwd: password,
         companyName: companyName,
