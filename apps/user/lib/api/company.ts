@@ -2,7 +2,7 @@ import axiosClient from "./axiosClient";
 import {
   SearchCompanyRequest,
   SearchCompanyResponse,
-} from "@user/app/types/dto/company";
+} from "@user/types/company.dto";
 
 /**
  * @description 기업 검색 API
