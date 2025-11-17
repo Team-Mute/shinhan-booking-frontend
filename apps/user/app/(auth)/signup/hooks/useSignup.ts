@@ -49,7 +49,7 @@ export function useSignup() {
         userEmail: email,
         userPwd: password,
         companyName: companyName,
-        agreeEmail: isEmailAgreed,
+        agreeEmail: true,
       });
 
       if (response.status === 201) {

@@ -25,12 +25,14 @@ export async function signUpApi({
   userEmail,
   userPwd,
   companyName,
+  agreeEmail,
 }: SignUpData) {
   const response = await axiosClient.post("/api/users/signup", {
     userName,
     userEmail,
     userPwd,
     companyName,
+    agreeEmail,
   });
   return response;
 }
