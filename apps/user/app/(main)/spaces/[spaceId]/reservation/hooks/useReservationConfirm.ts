@@ -194,19 +194,19 @@ export function useReservationConfirm() {
   const { amOptions, pmOptions } = useMemo(() => {
     // 1. 00:00부터 23:30까지 모든 30분 슬롯을 생성(48개 슬롯 확보)
     const allPossibleSlots: string[] = [];
-
     let checkTime = parse("00:00", "HH:mm", new Date());
     const endHour = 24;
 
     while (checkTime.getHours() < endHour) {
       allPossibleSlots.push(format(checkTime, "HH:mm"));
       checkTime = addMinutes(checkTime, 30);
-
+      // 23:30 슬롯까지 포함하고, 다음 00:00에서 종료
       if (checkTime.getHours() === 0 && checkTime.getMinutes() === 0) break;
     }
 
     // 2. API 응답의 시간 범위를 Date 객체로 파싱하여 비교하기 쉬운 형태로 준비합니다.
     const availableRanges = availablePrevisitTimes.map((slot) => {
+      // API 시간 포맷은 "HH:mm:ss" 이므로, 앞 5자리만 사용
       const start = parse(slot.startTime.substring(0, 5), "HH:mm", new Date());
       const end = parse(slot.endTime.substring(0, 5), "HH:mm", new Date());
       return { start, end };
@@ -215,12 +215,13 @@ export function useReservationConfirm() {
     // 3. 전체 슬롯을 순회하며 이용 가능 여부(isAvailable)를 판단하여 객체 배열을 생성합니다.
     const combinedSlots: TimeOption[] = allPossibleSlots.map((slotTime) => {
       const slotStart = parse(slotTime, "HH:mm", new Date());
-      const slotEnd = addMinutes(slotStart, 30);
+      const slotEnd = addMinutes(slotStart, 30); // 30분 슬롯의 끝
 
       let isAvailable = false;
 
       for (const range of availableRanges) {
-        // 슬롯 시작 시간이 Range.start >= 이고 슬롯 종료 시간이 Range.end <= 이어야 함
+        // 슬롯 시작 시간이 Range.start 이상이고 슬롯 종료 시간이 Range.end 이하인지 확인합니다.
+        // (예: 09:00~09:30 슬롯은 09:00~10:00 범위에 완전히 포함됩니다.)
         if (
           slotStart.getTime() >= range.start.getTime() &&
           slotEnd.getTime() <= range.end.getTime()
@@ -236,11 +237,36 @@ export function useReservationConfirm() {
       };
     });
 
-    // 4. AM/PM으로 분리합니다.
-    const amSlots = combinedSlots.filter(
+    // 4. 양 끝의 연속적인 비활성화된 슬롯을 제거합니다.
+    let startIndex = 0;
+    let endIndex = combinedSlots.length - 1;
+
+    // 앞에서부터 첫 번째 isAvailable: true 를 찾습니다.
+    while (
+      startIndex < combinedSlots.length &&
+      !combinedSlots[startIndex].isAvailable
+    ) {
+      startIndex++;
+    }
+
+    // 뒤에서부터 마지막 isAvailable: true 를 찾습니다.
+    while (endIndex >= 0 && !combinedSlots[endIndex].isAvailable) {
+      endIndex--;
+    }
+
+    // 만약 모든 슬롯이 비활성화인 경우 (startIndex > endIndex), 빈 배열을 반환합니다.
+    if (startIndex > endIndex) {
+      return { amOptions: [], pmOptions: [] };
+    }
+
+    // 실제로 보여줄 슬롯을 잘라냅니다. (endIndex는 마지막 유효 슬롯의 인덱스이므로 +1)
+    const filteredSlots = combinedSlots.slice(startIndex, endIndex + 1);
+
+    // 5. AM/PM으로 분리합니다.
+    const amSlots = filteredSlots.filter(
       (s) => Number(s.time.split(":")[0]) < 12
     );
-    const pmSlots = combinedSlots.filter(
+    const pmSlots = filteredSlots.filter(
       (s) => Number(s.time.split(":")[0]) >= 12
     );
 
@@ -261,16 +287,13 @@ export function useReservationConfirm() {
 
     let processedReservationTo;
     if (endTime === "23:59") {
-        // 23:59일 경우, 날짜만 조합하고 시간을 23:59:59로 수동 설정
-        const formattedDate = format(endDateTime, "yyyy-MM-dd");
-        processedReservationTo = `${formattedDate}T23:59:59`;
+      // 23:59일 경우, 날짜만 조합하고 시간을 23:59:59로 수동 설정
+      const formattedDate = format(endDateTime, "yyyy-MM-dd");
+      processedReservationTo = `${formattedDate}T23:59:59`;
     } else {
-        // 그 외의 경우, combineDateAndTime 로직 사용 (예: 10:30:00)
-        processedReservationTo = combineDateAndTime(
-            endDateTime,
-            endTime,
-            "end"
-        ) ?? "";
+      // 그 외의 경우, combineDateAndTime 로직 사용 (예: 10:30:00)
+      processedReservationTo =
+        combineDateAndTime(endDateTime, endTime, "end") ?? "";
     }
 
     try {
