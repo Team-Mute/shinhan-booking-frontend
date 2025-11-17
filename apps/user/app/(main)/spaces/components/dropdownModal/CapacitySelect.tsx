@@ -12,7 +12,7 @@ import colors from "@styles/theme";
  */
 interface CapacitySelectProps {
   value: number;
-  maximum: number;
+  maximum?: number;
   onChange: (newValue: number) => void;
 }
 
