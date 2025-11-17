@@ -17,9 +17,6 @@
 # Lock files
 package-lock.json
 
-# pnpm lock
-pnpm-lock.yaml
-
 # testing
 /coverage
 
