@@ -3,7 +3,7 @@ import styled from "@emotion/styled";
 import colors from "@styles/theme";
 /**
  * Pagination.tsx
- * 
+ *
  * 페이지네이션 컴포넌트
  *
  * 이 컴포넌트는 페이지 목록을 탐색할 수 있는 페이지네이션 컨트롤을 렌더링합니다.
@@ -24,6 +24,8 @@ interface PaginationProps {
   totalPages: number;
   startPage: number;
   endPage: number;
+  prevIcon?: React.ReactNode;
+  nextIcon?: React.ReactNode;
   onPageChange: (page: number) => void;
   onPrevGroup: () => void;
   onNextGroup: () => void;
@@ -34,6 +36,8 @@ const Pagination: React.FC<PaginationProps> = ({
   totalPages,
   startPage,
   endPage,
+  prevIcon,
+  nextIcon,
   onPageChange,
   onPrevGroup,
   onNextGroup,
@@ -45,7 +49,7 @@ const Pagination: React.FC<PaginationProps> = ({
       {/* 이전 그룹 버튼 */}
       {totalPages > 1 && (
         <PageButton disabled={startPage === 1} onClick={onPrevGroup}>
-          <img src="/icons/prev.svg" alt="이전" width={20} height={20} />
+          {prevIcon ?? <span>{"<"}</span>}
         </PageButton>
       )}
 
@@ -65,11 +69,8 @@ const Pagination: React.FC<PaginationProps> = ({
 
       {/* 다음 그룹 버튼 */}
       {totalPages > 1 && (
-        <PageButton
-          disabled={endPage >= totalPages}
-          onClick={onNextGroup}
-        >
-          <img src="/icons/next.svg" alt="다음" width={20} height={20} />
+        <PageButton disabled={endPage >= totalPages} onClick={onNextGroup}>
+          {nextIcon ?? <span>{">"}</span>}
         </PageButton>
       )}
     </PaginationWrapper>

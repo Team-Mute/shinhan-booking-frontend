@@ -8,32 +8,9 @@ import {
   cancleReservationApi,
 } from "@user/lib/api/reservation";
 import ReservationCancelModal from "./ReservationCancelModal";
-import ReservationChangeModal from "./ReservationChangeModal";
 import { useRouter } from "next/navigation";
-// --- 타입 정의 ---
-interface Previsit {
-  previsitId: number;
-  previsitFrom: string;
-  previsitTo: string;
-}
-interface ReservationDetails {
-  spaceId: number;
-  spaceName: string;
-  spaceImageUrl: string | null;
-  orderId: string;
-  reservationFrom: string;
-  reservationTo: string;
-  reservationHeadcount: number;
-  reservationPurpose: string;
-  reservationStatusName:
-    | "진행중"
-    | "예약완료"
-    | "이용완료"
-    | "예약취소"
-    | "반려";
-  previsits: Previsit[];
-  reservationAttachment?: string[];
-}
+import { ReservDetailResponse } from "@user/types/reservation.dto";
+
 interface ReservationInfoModalProps {
   isOpen: boolean;
   onClose: (isChanged?: boolean) => void; // 변경 여부를 전달할 수 있도록 수정
@@ -77,15 +54,13 @@ export default function ReservationInfoModal({
 }: ReservationInfoModalProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"info" | "reason">("info");
-  const [reservation, setReservation] = useState<ReservationDetails | null>(
+  const [reservation, setReservation] = useState<ReservDetailResponse | null>(
     null
   );
   const [rejectMessage, setRejectMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false); // 취소 확인 모달 상태
-  const [isChangeModalOpen, setIsChangeModalOpen] = useState(false);
-
-  const isRejected = reservation?.reservationStatusName === "반려";
+  const isRejected = rejectMessage != "" ? true : false;
 
   useEffect(() => {
     if (!isOpen || !reservationId) {
@@ -101,19 +76,17 @@ export default function ReservationInfoModal({
           ? resData
           : { ...resData, reservationStatusName: status };
         setReservation(result);
-        if (result.reservationStatusName === "반려") {
-          try {
-            const rejectData = await getReservationRejectMsgApi(reservationId);
-            setRejectMessage(
-              rejectData.memo || "반려 사유를 불러왔으나 내용이 없습니다."
-            );
-          } catch (err) {
-            if ((err as any).response?.status === 404) {
-              setRejectMessage("등록된 반려 사유가 없습니다.");
-            } else {
-              console.error("반려 사유를 가져오는 데 실패했습니다:", err);
-              setRejectMessage("반려 사유를 불러오는 중 오류가 발생했습니다.");
-            }
+        try {
+          const rejectData = await getReservationRejectMsgApi(reservationId);
+          setRejectMessage(
+            rejectData.memo || "반려 사유를 불러왔으나 내용이 없습니다."
+          );
+        } catch (err) {
+          if ((err as any).response?.status === 400) {
+            setRejectMessage("등록된 반려 사유가 없습니다.");
+          } else {
+            console.error("반려 사유를 가져오는 데 실패했습니다:", err);
+            setRejectMessage("반려 사유를 불러오는 중 오류가 발생했습니다.");
           }
         }
       } catch (error) {
@@ -138,10 +111,6 @@ export default function ReservationInfoModal({
     }
   };
 
-  const handleOpenChangeModal = () => {
-    setIsChangeModalOpen(true); // 변경 모달 열기
-  };
-
   if (!isOpen) return null;
 
   // 공간 상세 페이지 이동
@@ -149,7 +118,7 @@ export default function ReservationInfoModal({
     router.push(`/spaces/${spaceId}`);
   };
 
-  // ... (renderInfoContent 함수 동일)
+  // 공간 상세 정보 렌더링
   const renderInfoContent = () => {
     if (isLoading) return <LoadingState>로딩 중...</LoadingState>;
     if (!reservation)
@@ -161,10 +130,10 @@ export default function ReservationInfoModal({
       reservation.reservationFrom,
       reservation.reservationTo
     );
-    const previsit =
-      reservation.previsits?.length > 0
-        ? formatDateTime(reservation.previsits[0].previsitFrom)
-        : null;
+
+    const previsit = reservation.previsits?.[0]?.previsitFrom
+      ? formatDateTime(reservation.previsits[0].previsitFrom)
+      : null;
 
     return (
       <InfoSection>
@@ -174,9 +143,12 @@ export default function ReservationInfoModal({
             <SpaceImage
               src={reservation.spaceImageUrl}
               alt={reservation.spaceName}
+              onClick={() => handleLocationClick(reservation.spaceId)}
             />
           )}
-          <DetailValue onClick={() => handleLocationClick(reservation.spaceId)}>{reservation.spaceName}</DetailValue>
+          <DetailValue onClick={() => handleLocationClick(reservation.spaceId)}>
+            {reservation.spaceName}
+          </DetailValue>
         </DetailItem>
         <InfoRow label="예약번호" value={reservation.orderId} />
         <InfoRow label="이용날짜" value={from.date} />
@@ -222,38 +194,6 @@ export default function ReservationInfoModal({
     );
   };
 
-  const renderFooterButtons = () => {
-    if (!reservation) return null;
-    switch (reservation.reservationStatusName) {
-      case "진행중":
-      case "예약완료":
-        return (
-          <PrimaryButton onClick={() => setIsCancelModalOpen(true)}>
-            예약취소
-          </PrimaryButton>
-        );
-      case "반려":
-        return (
-          <>
-            <ActionButton onClick={() => setIsCancelModalOpen(true)}>
-              예약취소
-            </ActionButton>
-            <PrimaryButton onClick={handleOpenChangeModal}>
-              예약 변경하기
-            </PrimaryButton>
-          </>
-        );
-      case "예약취소":
-        return (
-          <PrimaryButton onClick={handleOpenChangeModal}>
-            다시 예약하기
-          </PrimaryButton>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <>
       <ModalOverlay
@@ -285,12 +225,15 @@ export default function ReservationInfoModal({
                 예약 정보
               </TabButton>
               {isRejected && (
-                <TabButton
-                  isActive={activeTab === "reason"}
-                  onClick={() => setActiveTab("reason")}
-                >
-                  반려사유
-                </TabButton>
+                <>
+                  <RowGapBox />
+                  <TabButton
+                    isActive={activeTab === "reason"}
+                    onClick={() => setActiveTab("reason")}
+                  >
+                    반려사유
+                  </TabButton>
+                </>
               )}
             </TabContainer>
             {activeTab === "info" ? (
@@ -299,25 +242,12 @@ export default function ReservationInfoModal({
               <RejectReasonContent>{rejectMessage}</RejectReasonContent>
             )}
           </ModalContent>
-          <ModalFooter hasButtons={!!renderFooterButtons()}>
-            {renderFooterButtons()}
-          </ModalFooter>
         </ModalContainer>
       </ModalOverlay>
       <ReservationCancelModal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
         onConfirm={handleConfirmCancel}
-      />
-      <ReservationChangeModal
-        isOpen={isChangeModalOpen}
-        onClose={(isChanged) => {
-          setIsChangeModalOpen(false);
-          if (isChanged) {
-            onClose(true);
-          }
-        }}
-        reservationData={reservation}
       />
     </>
   );
@@ -330,7 +260,7 @@ const InfoRow = ({ label, value }: { label: string; value: string }) => (
   </DetailItem>
 );
 
-// --- 스타일 컴포넌트 ---
+// --- styled ---
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -412,7 +342,6 @@ const DetailValue = styled.p`
   font-weight: 500;
   color: #191f28;
   margin: 0;
-  cursor: pointer;
 `;
 const SpaceImage = styled.img`
   width: 100%;
@@ -420,6 +349,8 @@ const SpaceImage = styled.img`
   border-radius: 8px;
   object-fit: cover;
   background-color: #f0f0f0;
+  margin: 0;
+  cursor: pointer;
 `;
 const FileItem = styled.div`
   display: flex;
@@ -444,30 +375,7 @@ const LoadingState = styled.div`
   text-align: center;
   color: #8c8f93;
 `;
-const ModalFooter = styled.footer<{ hasButtons: boolean }>`
-  display: ${(p) => (p.hasButtons ? "flex" : "none")};
-  padding: 24px 20px;
-  gap: 12px;
-  border-radius: 0px 0px 12px 12px;
-  background: #ffffff;
-`;
-const ActionButton = styled.button`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0px 12px;
-  height: 46px;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  background: #e8e9e9;
-  color: #191f28;
-  border: none;
-  flex: 1;
-`;
-const PrimaryButton = styled(ActionButton)`
-  background: #0046ff;
-  color: #ffffff;
-  flex: 2;
+
+const RowGapBox = styled.div`
+  width: 0.1rem;
 `;

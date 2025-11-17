@@ -67,7 +67,7 @@ export type ReservListParams = {
 
 /** 예약 목록 조회 응답 DTO */
 export type ReservListResponse = {
-  content: [];
+  content: ReservListDetailContent[];
   totalElements: number;
   totalPages: number;
   currentPage: number;
@@ -138,6 +138,7 @@ export type ReservDetailResponse = {
   reservationId: number;
   orderId: string;
   spaceImageUrl: string;
+  spaceId: number;
   spaceName: string;
   reservationFrom: string;
   reservationTo: string;
@@ -145,6 +146,23 @@ export type ReservDetailResponse = {
   reservationPurpose: string;
   previsits: PrevisitInfo & { previsitId: number };
   reservationAttachment: string[];
+};
+
+// 예약 목록 내 단건 데이터 타입
+export type ReservListDetailContent = Omit<
+  ReservDetailResponse,
+  | "spaceImageUrl"
+  | "reservationHeadcount"
+  | "reservationPurpose"
+  | "reservationAttachment"
+> & {
+  reservationStatusName:
+    | "진행중"
+    | "예약완료"
+    | "이용완료"
+    | "예약취소"
+    | "취소"
+    | "반려";
 };
 
 /** 예약 삭제 요청 DTO */
