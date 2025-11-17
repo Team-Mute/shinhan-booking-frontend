@@ -205,12 +205,13 @@ export default function ReservationInfoModal({
     if (!reservation) return null;
 
     const isPrimary = status === "진행중" || status === "예약완료";
-    const ButtonComponent = isPrimary ? PrimaryButton : ActionButton;
 
-    return (
-      <ButtonComponent onClick={() => setIsCancelModalOpen(true)}>
-        예약취소
-      </ButtonComponent>
+    return isPrimary ? (
+      <PrimaryButton onClick={() => setIsCancelModalOpen(true)}>
+        예약 취소
+      </PrimaryButton>
+    ) : (
+      <></>
     );
   };
 
