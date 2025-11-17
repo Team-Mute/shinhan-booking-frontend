@@ -18,7 +18,7 @@ export async function searchCompanyApi({
   pageNo, // 요청 본문(body)에 페이지 번호 포함
 }: SearchCompanyRequest) {
   const response = await axiosClient.post<SearchCompanyResponse>(
-    "/api/corpname",
+    "/api/corpName",
     {
       corpNm,
       pageNo,
