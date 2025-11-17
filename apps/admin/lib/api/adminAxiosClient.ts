@@ -3,7 +3,7 @@ import { useAdminAuthStore } from "apps/admin/store/adminAuthStore";
 import { useLoaderStore } from "apps/admin/store/loaderStore";
 import { redirect } from "next/navigation";
 
-const baseURL = "http://localhost:8080";
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const adminAxiosClient = axios.create({
   baseURL: baseURL,
