@@ -117,7 +117,7 @@ export function useSignup() {
     { label: string; value: string }[]
   >([]);
 
-  const secondLevelRegions = [{ label: "전지역", value: "전지역" }];
+  const secondLevelRegions = [{ label: "전지역", value: null }];
 
   /**
    * @description

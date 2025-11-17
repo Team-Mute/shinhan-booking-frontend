@@ -27,6 +27,7 @@ const formatDateTime = (isoString: string) => {
   const dayOfWeek = ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
   const hours = date.getHours().toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");
+
   return {
     date: `${year}년 ${month}월 ${day}일, ${dayOfWeek}요일`,
     time: `${hours}:${minutes}`,
@@ -61,6 +62,8 @@ export default function ReservationInfoModal({
   const [isLoading, setIsLoading] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false); // 취소 확인 모달 상태
   const isRejected = rejectMessage != "" ? true : false;
+
+  const [isChangeModalOpen, setIsChangeModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !reservationId) {
@@ -194,6 +197,23 @@ export default function ReservationInfoModal({
     );
   };
 
+  const handleOpenChangeModal = () => {
+    setIsChangeModalOpen(true); // 변경 모달 열기
+  };
+
+  const renderFooterButtons = () => {
+    if (!reservation) return null;
+
+    const isPrimary = status === "진행중" || status === "예약완료";
+    const ButtonComponent = isPrimary ? PrimaryButton : ActionButton;
+
+    return (
+      <ButtonComponent onClick={() => setIsCancelModalOpen(true)}>
+        예약취소
+      </ButtonComponent>
+    );
+  };
+
   return (
     <>
       <ModalOverlay
@@ -242,6 +262,9 @@ export default function ReservationInfoModal({
               <RejectReasonContent>{rejectMessage}</RejectReasonContent>
             )}
           </ModalContent>
+          <ModalFooter hasButtons={!!renderFooterButtons()}>
+            {renderFooterButtons()}
+          </ModalFooter>
         </ModalContainer>
       </ModalOverlay>
       <ReservationCancelModal
@@ -378,4 +401,33 @@ const LoadingState = styled.div`
 
 const RowGapBox = styled.div`
   width: 0.1rem;
+`;
+
+const ModalFooter = styled.footer<{ hasButtons: boolean }>`
+  display: ${(p) => (p.hasButtons ? "flex" : "none")};
+  padding: 24px 20px;
+  gap: 12px;
+  border-radius: 0px 0px 12px 12px;
+  background: #ffffff;
+`;
+
+const ActionButton = styled.button`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0px 12px;
+  height: 46px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  background: #e8e9e9;
+  color: #191f28;
+  border: none;
+  flex: 1;
+`;
+const PrimaryButton = styled(ActionButton)`
+  background: #0046ff;
+  color: #ffffff;
+  flex: 2;
 `;
