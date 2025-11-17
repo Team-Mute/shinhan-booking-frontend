@@ -149,6 +149,12 @@ export async function getManagerListApi(paramsData: ManagerListParams) {
   return data;
 }
 
+// 공간 등록 시 지역 드롭다운 API (해당하는 지역에 맞는 드롭다운)
+export async function getRegionsListApi() {
+  const { data } = await adminAxiosClient.get(`/api/spaces-admin/regions`);
+  return data;
+}
+
 ////////////
 
 // 태그(편의시설)조회

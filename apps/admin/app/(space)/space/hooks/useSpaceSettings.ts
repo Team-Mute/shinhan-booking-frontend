@@ -10,7 +10,7 @@ import {
   getAddressApi,
   getCategoryListApi,
   getManagerListApi,
-  getRegionMenuListApi,
+  getRegionsListApi,
   getTagsApi,
 } from "@admin/lib/api/adminSpace";
 
@@ -77,11 +77,12 @@ export const useSpaceSettings = ({
     const fetchAllInitialData = async () => {
       try {
         const [regionsRes, categoriesRes, tagsRes] = await Promise.all([
-          getRegionMenuListApi(),
+          getRegionsListApi(),
           getCategoryListApi(),
           getTagsApi(),
         ]);
 
+        console.log(regionsRes);
         // 지점 옵션 설정
         setRegions(
           regionsRes.map((r: RegionListResponse[number]) => ({
