@@ -12,6 +12,7 @@ import colors from "@styles/theme";
  */
 interface CapacitySelectProps {
   value: number;
+  maximum: number;
   onChange: (newValue: number) => void;
 }
 
@@ -26,6 +27,7 @@ interface CapacitySelectProps {
  */
 export default function CapacitySelect({
   value,
+  maximum,
   onChange,
 }: CapacitySelectProps) {
   /**
@@ -39,7 +41,7 @@ export default function CapacitySelect({
    * @description 인원 수를 1 증가시키고 onChange를 호출
    */
   const handleIncrease = () => {
-    onChange(value + 1);
+    if (value < maximum) onChange(value + 1);
   };
 
   return (
@@ -53,7 +55,7 @@ export default function CapacitySelect({
         {/* 현재 인원 수 표시 */}
         <Count>{value}</Count>
         {/* 인원 증가 버튼 */}
-        <CircleButton onClick={handleIncrease}>
+        <CircleButton onClick={handleIncrease} disabled={value >= maximum}>
           <img src="/icons/plus.svg" alt="인원 증가" />
         </CircleButton>
       </Controls>

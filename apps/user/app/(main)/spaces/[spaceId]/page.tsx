@@ -154,6 +154,7 @@ export default function SpaceDetailPage() {
               <Value>
                 <CapacitySelect
                   value={reservationStore.capacity ?? 1}
+                  maximum={spaceDetail?.spaceCapacity ?? 50}
                   onChange={handleChangeCapacity}
                 />
               </Value>
