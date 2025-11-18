@@ -7,7 +7,8 @@
  * 예약 생성: createReservationApi
  * 예약 단건 취소: cancleReservationApi
  *
- * 예약 가능 일 조회: getAvailableDatesApi
+ * 예약 가능일 조회: getAvailableDatesApi
+ * 기간 예약 가능일 조회: getFullyAvailableDatesApi
  * 예약 가능 시간 조회: getAvailableTimesApi
  *
  * 반려 사유 조회: /api/reservations/rejectMessage/{reservationId}
@@ -102,6 +103,23 @@ export async function getAvailableDatesApi(
     year: year,
     month: month,
   });
+  return data;
+}
+
+// 기간 예약 가능일 조회: getFullyAvailableDatesApi
+export async function getFullyAvailableDatesApi(
+  spaceId: number,
+  year: number,
+  month: number
+) {
+  const { data } = await axiosClient.post(
+    `/api/reservations/fully-available-dates`,
+    {
+      spaceId: spaceId,
+      year: year,
+      month: month,
+    }
+  );
   return data;
 }
 
