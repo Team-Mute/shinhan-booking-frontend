@@ -2,7 +2,6 @@
  *
  * 예약 단건 조회: getReservationApi
  * 예약 단건 수정: updateReservationApi
- * 예약 단건 삭제: deleteReservationApi
  *
  * 예약 리스트 조회: getReservationListApi
  * 예약 생성: createReservationApi
@@ -42,14 +41,6 @@ export async function updateReservationApi(
     {
       headers: { "Content-Type": "multipart/form-data" },
     }
-  );
-  return data;
-}
-
-// 예약 단건 삭제
-export async function deleteReservationApi(reservationId: number) {
-  const { data } = await axiosClient.delete(
-    `/api/reservations/${reservationId}`
   );
   return data;
 }
