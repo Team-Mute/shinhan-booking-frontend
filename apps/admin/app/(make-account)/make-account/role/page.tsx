@@ -20,11 +20,23 @@ export default function SignupRolePage() {
   const { role, setRole, region, setRegion, regionOptions, handleComplete } =
     useSignup();
 
+  // 버튼 활성화 조건: role이 설정되었고, region이 빈 문자열이 아닐 때만 활성화 (null 또는 "전지역"은 활성화)
+  const isButtonActive = !!role && region !== "";
+
   return (
     <Container>
       <Loader>
-        <TitleText>관리할 지역과 권한을 설정하세요</TitleText>
+        <TitleText>관리할 권한과 지역을 설정하세요</TitleText>
         <RoleForm>
+          {/* 권한 설정 */}
+          <Selectbox2
+            options={ROLES}
+            value={role}
+            onChange={setRole}
+            placeholder="권한 설정"
+          />
+
+          <Gap />
           {/* 관리 지역 선택 */}
           {role === "0" ? (
             <DisabledText>관리 지역 없음</DisabledText>
@@ -34,23 +46,17 @@ export default function SignupRolePage() {
               value={region}
               onChange={setRegion}
               placeholder="관리지역 선택"
+              // 2차 승인자(role === "1")는 지역 선택이 "전지역"으로 고정되어야 함
+              disabled={role === "1"}
             />
           )}
-          <Gap />
-          {/* 권한 설정 */}
-          <Selectbox2
-            options={ROLES}
-            value={role}
-            onChange={setRole}
-            placeholder="권한 설정"
-          />
           {/* 완료 버튼 */}
           <ButtonWrapper>
             <Button
               type="button"
-              isActive={!!region && !!role}
+              isActive={isButtonActive}
               onClick={handleComplete}
-              disabled={!region || !role}
+              disabled={!isButtonActive}
             >
               회원가입 완료
             </Button>

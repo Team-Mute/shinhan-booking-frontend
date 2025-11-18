@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+// ... (생략된 import 구문)
 import { useRouter } from "next/navigation";
 import { adminSignUpApi } from "@admin/lib/api/adminAuth";
 import { useAdminAuthStore } from "@admin/store/adminAuthStore";
@@ -77,7 +78,7 @@ export function useSignup() {
   };
 
   // --- 상태 정의 ---
-  const [region, setRegion] = useState("");
+  const [region, setRegion] = useState(""); // 초기값은 빈 문자열
   const [role, setRole] = useState("");
   const [regionOptions, setRegionOptions] = useState<
     { label: string; value: string }[]
@@ -98,12 +99,17 @@ export function useSignup() {
     const fetchRegions = async () => {
       try {
         const res: RegionListResponse = await getRegionMenuListApi();
-        const options = res.map((r: Region) => ({
+
+        // ⭐️ 수정 사항: API 응답에서 '전지역'이 있다면 1차 승인자 목록에서 제외합니다.
+        const filteredRegions = res.filter((r) => r.regionName !== "전지역");
+
+        const options = filteredRegions.map((r: Region) => ({
           label: r.regionName,
           value: r.regionName,
         }));
+
         setRegionOptions(options);
-        setFirstLevelRegions(options);
+        setFirstLevelRegions(options); // 1차 승인자 목록도 필터링된 목록으로 설정
       } catch (err) {
         console.error("지역 목록 로드 실패", err);
         setRegionOptions([]);
@@ -117,7 +123,8 @@ export function useSignup() {
     { label: string; value: string }[]
   >([]);
 
-  const secondLevelRegions = [{ label: "전지역", value: null }];
+  // 2차 승인자용 "전지역" 옵션 (서버에 regionName으로 "전지역"을 보냄)
+  const secondLevelRegions = [{ label: "전지역", value: "전지역" }];
 
   /**
    * @description
@@ -128,12 +135,19 @@ export function useSignup() {
       setRegion("관리 지역 없음");
       setRegionOptions([]);
     } else if (role === "2") {
+      // 1차 승인자 (지역 선택 필요)
+      // firstLevelRegions는 이미 "전지역"이 제거된 상태이므로 "전지역"이 보이지 않습니다.
       setRegionOptions(firstLevelRegions);
+      setRegion(""); // 지역 선택 필드를 다시 비움
     } else if (role === "1") {
+      // 2차 승인자 (전지역)
       setRegionOptions(secondLevelRegions);
-      setRegion("전지역");
+      setRegion("전지역"); // 2차 승인자는 region을 "전지역"으로 설정
+    } else {
+      setRegion("");
+      setRegionOptions(firstLevelRegions);
     }
-  }, [role]);
+  }, [role, firstLevelRegions]);
 
   /**
    * @description
@@ -151,10 +165,13 @@ export function useSignup() {
    */
   const handleComplete = async () => {
     try {
+      // 2차 승인자 (roleId: 1)의 경우 regionName은 "전지역"으로 확정됨
+      const regionToSend = region === "전지역" ? "전지역" : region;
+
       const updatedAdminSignupData = {
         ...adminSignUpData,
         roleId: Number(role),
-        regionName: region,
+        regionName: regionToSend, // 수정된 region 값 사용
       };
 
       const response = await adminSignUpApi(updatedAdminSignupData);
