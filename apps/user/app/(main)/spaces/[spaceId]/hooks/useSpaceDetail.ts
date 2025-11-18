@@ -36,10 +36,14 @@ export function useSpaceDetail() {
   const [availableDates, setAvailableDates] = useState<number[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const baseDate = reservationStore.startDate || new Date();
-  const year = baseDate.getFullYear();
-  const month = baseDate.getMonth() + 1;
-  const day = baseDate.getDate();
+  // 1. **수정:** reservationStore.startDate가 null일 경우, 오늘 날짜(new Date())를 사용하지 않음
+  const baseDate = reservationStore.startDate; // startDate가 null 또는 Date 객체일 수 있음
+  const today = new Date();
+
+  // baseDate가 없으면 현재 년/월을 사용 (캘린더의 초기 뷰를 오늘 월로 설정)
+  const year = baseDate?.getFullYear() || today.getFullYear();
+  const month = (baseDate?.getMonth() ?? today.getMonth()) + 1;
+  const day = baseDate?.getDate() || today.getDate();
 
   const { startTimeOptions, endTimeOptions } = useReservationTimes({
     spaceId,
@@ -63,8 +67,8 @@ export function useSpaceDetail() {
   useEffect(() => {
     if (!spaceId || !isInitialLoad) return;
 
-    const initialStartDate =
-      toDateFromFilter(filterStore.startDate) || toDateFromFilter(new Date());
+    // 2. **수정:** 필터에 startDate가 없으면 today를 디폴트로 사용하지 않음
+    const initialStartDate = toDateFromFilter(filterStore.startDate);
     const initialEndDate = toDateFromFilter(filterStore.endDate);
     const initialTime = filterStore.time;
 
@@ -76,7 +80,8 @@ export function useSpaceDetail() {
 
     setReservation({
       capacity: filterStore.capacity ?? 1,
-      startDate: initialStartDate,
+      // 필터 값이 없으면 null로 설정
+      startDate: initialStartDate ?? null,
       endDate: isFilterRange ? initialEndDate : null,
       time: isFilterRange
         ? { start: "00:00", end: "23:59" }
@@ -85,11 +90,16 @@ export function useSpaceDetail() {
         : { start: undefined, end: undefined },
     });
 
+    // startDate가 있을 때만 해당 월의 이용 가능 일자를 가져옴
     if (initialStartDate)
       handleMonthChange(
         initialStartDate.getFullYear(),
         initialStartDate.getMonth() + 1
       );
+    // 선택된 날짜가 없는 경우, 현재 월의 이용 가능 일자를 미리 가져옴
+    else {
+      handleMonthChange(today.getFullYear(), today.getMonth() + 1);
+    }
 
     setIsInitialLoad(false);
   }, [spaceId, isInitialLoad]);
@@ -131,6 +141,11 @@ export function useSpaceDetail() {
         if (!availableDates || availableDates.length === 0) return false;
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
           const dayNumber = d.getDate();
+          // 현재 월이 아닐 경우 availableDates 체크를 건너뛰어야 하지만,
+          // 현재 로직은 Calendar 컴포넌트에서 월이 변경될 때마다 availableDates를 업데이트하므로
+          // 현재 표시된 달력 월에 대해서만 체크가 이루어집니다.
+          // 하지만 기간 선택 시에는 선택한 기간 전체에 대한 체크가 필요할 수 있습니다.
+          // (API 호출을 통해 전체 기간을 체크하는 것이 더 정확하지만, 현재 로직을 유지함)
           if (!availableDates.includes(dayNumber)) return true;
         }
         return false;
@@ -154,6 +169,9 @@ export function useSpaceDetail() {
         const end = toDateFromFilter(endString);
         if (!start || !end) return;
 
+        // **참고:** isUnavailableInRange 함수는 현재 표시되는 월의 availableDates만을 사용하여
+        // 선택된 전체 기간의 유효성을 검사하는 데는 불완전할 수 있습니다.
+        // 이 부분은 API 설계에 따라 추가적인 서버 체크 로직이 필요할 수 있습니다.
         if (isUnavailableInRange(start, end)) {
           alert("선택한 기간 내 이용 불가능한 날짜가 포함되어 있습니다.");
           return;

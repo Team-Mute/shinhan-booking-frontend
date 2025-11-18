@@ -1,4 +1,3 @@
-// ReservationCalendar.tsx (최종 수정)
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -51,8 +50,14 @@ export default function ReservationCalendar({
 
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  // const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  // const [currentYear, setCurrentYear] = useState(today.getFullYear());
+
+  const initialMonth = externalStart?.getMonth() ?? today.getMonth();
+  const initialYear = externalStart?.getFullYear() ?? today.getFullYear();
+
+  const [currentMonth, setCurrentMonth] = useState(initialMonth);
+  const [currentYear, setCurrentYear] = useState(initialYear);
 
   // 월 변경 시 onMonthChange 호출
   useEffect(() => {
@@ -62,13 +67,23 @@ export default function ReservationCalendar({
   }, [currentYear, currentMonth, onMonthChange]);
 
   // 외부 시작일이 있을 경우, 해당 월로 이동 (최초 로드 시)
+  // useEffect(() => {
+  //   if (externalStart && externalStart instanceof Date && isInitialLoad) {
+  //     setCurrentYear(externalStart.getFullYear());
+  //     setCurrentMonth(externalStart.getMonth());
+  //     setIsInitialLoad(false);
+  //   }
+  // }, [externalStart]);
   useEffect(() => {
-    if (externalStart && externalStart instanceof Date && isInitialLoad) {
-      setCurrentYear(externalStart.getFullYear());
-      setCurrentMonth(externalStart.getMonth());
+    // externalStart가 이미 초기 상태에 반영되었으므로,
+    // 이 useEffect는 초기화 로직을 생략하고 월 변경을 방지할 수 있습니다.
+    // 기존의 강제 이동 로직을 제거하고, onMonthChange만 신뢰하도록 합니다.
+    // (선택된 날짜가 없으면 현재 월로 유지)
+    if (isInitialLoad) {
+      // isInitialLoad 상태는 불필요하므로 제거
       setIsInitialLoad(false);
     }
-  }, [externalStart]);
+  }, []);
 
   /**
    * @description 이전/다음 달 이동
@@ -173,7 +188,7 @@ export default function ReservationCalendar({
     // 2. 이미 기간이 완성된 경우 (externalEnd가 존재)
     if (!externalStart || externalEnd) {
       // 첫 클릭으로 간주하고, '단일' 선택으로 부모에 전달
-      // -> SpaceDetailPage에서 이 'single' 결과로 start: 선택일, end: null로 설정될 것입니다.
+      // -> SpaceDetailPage에서 이 'single' 결과로 start: 선택일, end: null로 설정될 것.
       onSelectDate({ single: formatDate(date) });
       return;
     }
