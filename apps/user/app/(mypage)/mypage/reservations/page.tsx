@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import styled from "@emotion/styled";
+// 컴포넌트 경로 수정이 필요한 경우 프로젝트에 맞게 변경
 import MySideBar from "../components/sideBar";
 import closeIcon from "@user/svg-icons/close.svg";
 import { useRouter } from "next/navigation";
@@ -16,14 +17,14 @@ export default function MyPageReservations() {
   const router = useRouter();
   const {
     activeTab,
-    setActiveTab,
+    setActiveTab, // 훅에서 페이지 리셋 로직 포함
     searchTerm,
-    setSearchTerm,
+    setSearchTerm, // 훅에서 페이지 리셋 로직 포함
     currentPage,
     setCurrentPage,
     totalPages,
     paginatedReservations,
-    itemsPerPage,
+    isLoading, // 훅에서 추가된 로딩 상태
   } = useReservations(5);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -111,7 +112,7 @@ export default function MyPageReservations() {
           </SearchContainer>
 
           <ReservationList>
-            {paginatedReservations.length === 0 ? (
+            {paginatedReservations.length === 0 && !isLoading ? (
               <EmptyState>예약 내역이 없습니다.</EmptyState>
             ) : (
               paginatedReservations.map((reservation) => (
@@ -169,15 +170,17 @@ export default function MyPageReservations() {
             status={selectedReservationStatus}
           />
 
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            startPage={startPage}
-            endPage={endPage}
-            onPageChange={setCurrentPage}
-            onPrevGroup={handlePrevGroup}
-            onNextGroup={handleNextGroup}
-          />
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              startPage={startPage}
+              endPage={endPage}
+              onPageChange={setCurrentPage}
+              onPrevGroup={handlePrevGroup}
+              onNextGroup={handleNextGroup}
+            />
+          )}
         </Wrapper>
       </Loader>
     </Container>
