@@ -2,8 +2,13 @@ import { useState, useCallback } from "react";
 import { SpaceCreateBody, SpaceUpdateBody } from "@admin/types/dto/space.dto";
 import { useSpaceSettings } from "./useSpaceSettings";
 
-const defaultForm: SpaceCreateBody = {
+interface SpaceFormState extends SpaceCreateBody {
+  customTagNames: string[]; // 새로 추가된 커스텀 태그만 모아두는 배열
+}
+
+const defaultForm: SpaceFormState = {
   space: {
+    // ... 기존 space 필드
     spaceName: undefined,
     spaceDescription: undefined,
     spaceCapacity: undefined,
@@ -11,7 +16,7 @@ const defaultForm: SpaceCreateBody = {
     regionId: undefined,
     categoryId: undefined,
     locationId: undefined,
-    tagNames: [],
+    tagNames: [], // 태그 이름은 space에 그대로 유지
     adminId: undefined,
     reservationWay: undefined,
     spaceRules: undefined,
@@ -27,13 +32,14 @@ const defaultForm: SpaceCreateBody = {
     closedDays: [],
   },
   images: [],
+  customTagNames: [],
 };
 
 export const useSpaceForm = (
-  onSubmit: (data: any, isUpdate: boolean) => Promise<void>, // 👈 onSubmit 타입 변경
-  isUpdateMode: boolean // 👈 isUpdateMode를 prop으로 받음
+  onSubmit: (data: any, isUpdate: boolean) => Promise<void>,
+  isUpdateMode: boolean
 ) => {
-  const [form, setForm] = useState<SpaceCreateBody>(defaultForm);
+  const [form, setForm] = useState<SpaceFormState>(defaultForm);
   const [initialImageUrls, setInitialImageUrls] = useState<string[]>([]);
 
   const [isSettingsValid, setIsSettingsValid] = useState(false);
@@ -41,21 +47,28 @@ export const useSpaceForm = (
 
   const isFormValid = isSettingsValid && isTimeValid;
 
-  // ✅ [수정] ViewModel 호출: URL 관련 상태도 함께 전달
+  //  ViewModel 호출: URL 관련 상태도 함께 전달
   const vm = useSpaceSettings({
     form,
     setForm,
-    initialImageUrls, // ✅ ViewModel로 전달
-    setInitialImageUrls, // ✅ ViewModel로 전달
+    initialImageUrls,
+    setInitialImageUrls,
   });
 
-  // ... (isFormValid 계산 로직 유지)
-
-  // ✅ [수정] resetForm: 초기 데이터가 있을 경우 initialImageUrls 상태도 설정
+  //resetForm: 초기 데이터가 있을 경우 initialImageUrls 상태도 설정
   const resetForm = useCallback((data?: any) => {
-    setForm(data?.space ? { ...data, images: data.images || [] } : defaultForm);
+    // data.space가 있을 경우 (수정 모드) 기존 데이터를 사용, 없으면 defaultForm 사용
+    const baseForm = data?.space
+      ? {
+          ...data,
+          images: data.images || [],
+          customTagNames: data.customTagNames || [], // ✅ 추가
+        }
+      : defaultForm;
 
-    // ✅ URL 배열은 resetForm 시 initialImageUrls 상태에 저장
+    setForm(baseForm);
+
+    // URL 배열은 resetForm 시 initialImageUrls 상태에 저장
     setInitialImageUrls(data?.initialImageUrls || []);
   }, []);
 

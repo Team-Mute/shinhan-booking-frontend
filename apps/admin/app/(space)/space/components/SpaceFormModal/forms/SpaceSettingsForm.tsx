@@ -235,7 +235,9 @@ const SpaceSettingsForm: React.FC<Props> = ({
           />
         </Row>
         <RemovableChipGroup
-          chips={vm.customChips}
+          // 렌더링 소스를 vm.customChips (제거됨) 대신 form.customTagNames로 변경
+          chips={form.customTagNames || []}
+          // 삭제 핸들러는 vm에서 가져온 함수를 그대로 사용
           onRemove={vm.removeCustomChip}
         />
       </Field>

@@ -47,7 +47,6 @@ export const useSpaceSettings = ({
   const [managers, setManagers] = useState<SelectOption[]>([]); // 담당자 옵션 리스트
   const [address, setAddress] = useState(""); // 선택된 지점의 상세 주소
 
-  const [customChips, setCustomChips] = useState<string[]>([]); // 사용자 추가 편의시설 태그 (로컬 상태)
   const [newChip, setNewChip] = useState(""); // 새로 입력 중인 편의시설 이름
 
   // 수용 인원 입력 제어를 위한 로컬 상태 (사용자의 raw 문자열 입력값을 관리하여 유효성 에러를 즉시 표시)
@@ -352,18 +351,26 @@ export const useSpaceSettings = ({
    */
   const addChip = useCallback(() => {
     const v = newChip.trim();
-    if (!v || customChips.includes(v)) return; // 빈 값 또는 중복 방지
+    // ✅ form 상태에서 현재 커스텀 태그 목록을 가져옵니다.
+    const currentCustomTags = form.customTagNames || [];
 
-    setCustomChips((prev) => [...prev, v]); // 로컬 커스텀 칩 상태 업데이트
+    // ✅ 중앙 폼 상태를 기준으로 중복 검사
+    if (!v || currentCustomTags.includes(v)) return;
+
     setForm((prev: any) => ({
       ...prev,
+      // ✅ 1. form.customTagNames에 추가 (탭 이동 시 유지되는 데이터)
+      customTagNames: [...currentCustomTags, v],
+
+      // 2. form.space.tagNames에도 추가 (서버 전송용)
       space: {
         ...prev.space,
-        tagNames: [...(prev.space.tagNames || []), v], // 폼 상태에 태그 추가
+        tagNames: [...(prev.space.tagNames || []), v],
       },
     }));
-    setNewChip(""); // 입력 필드 초기화
-  }, [newChip, customChips, setForm]);
+    setNewChip("");
+    // ✅ 의존성 배열에 form.customTagNames를 추가 (또는 form 전체를 추가)
+  }, [newChip, form.customTagNames, setForm]);
 
   /**
    * [커스텀 태그 제거]
@@ -371,16 +378,27 @@ export const useSpaceSettings = ({
    */
   const removeCustomChip = useCallback(
     (chip: string) => {
-      setCustomChips((prev) => prev.filter((c) => c !== chip)); // 로컬 커스텀 칩 상태에서 제거
-      setForm((prev: any) => ({
-        ...prev,
-        space: {
-          ...prev.space,
-          tagNames: (prev.space.tagNames || []).filter(
-            (c: string) => c !== chip
-          ), // 폼 상태에서 태그 제거
-        },
-      }));
+      // setCustomChips((prev) => prev.filter((c) => c !== chip)); // ❌ 이 줄을 제거합니다.
+
+      setForm((prev: any) => {
+        // ✅ 1. form.customTagNames에서 제거
+        const nextCustomTags = (prev.customTagNames || []).filter(
+          (c: string) => c !== chip
+        );
+
+        return {
+          ...prev,
+          customTagNames: nextCustomTags,
+
+          // 2. form.space.tagNames에서도 제거 (서버 전송용)
+          space: {
+            ...prev.space,
+            tagNames: (prev.space.tagNames || []).filter(
+              (c: string) => c !== chip
+            ),
+          },
+        };
+      });
     },
     [setForm]
   );
@@ -518,7 +536,6 @@ export const useSpaceSettings = ({
     tags,
     managers,
     address,
-    customChips,
     newChip,
     capacityInput,
 
