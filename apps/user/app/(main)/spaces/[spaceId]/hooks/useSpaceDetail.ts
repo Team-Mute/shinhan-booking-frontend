@@ -118,6 +118,15 @@ export function useSpaceDetail() {
     (result: { single?: string; range?: [string, string] }) => {
       if (!spaceId) return;
 
+      if (!result.single && !result.range) {
+        setReservation({
+          startDate: null,
+          endDate: null,
+          time: { start: undefined, end: undefined },
+        });
+        return;
+      }
+
       const isUnavailableInRange = (start: Date, end: Date) => {
         if (!availableDates || availableDates.length === 0) return false;
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {

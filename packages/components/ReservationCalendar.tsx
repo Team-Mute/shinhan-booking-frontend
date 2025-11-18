@@ -160,6 +160,13 @@ export default function ReservationCalendar({
       onSelectDate({ single: formatDate(date) });
       return;
     }
+
+    if (externalStart && !externalEnd && isSameDay(date, externalStart)) {
+      onSelectDate({}); // 빈 객체를 전달하여 부모가 선택을 초기화
+
+      return;
+    }
+
     // --- 기간 선택 로직 시작 (selectsRange=true) ---
 
     // 1. 선택된 날짜가 없거나 (새로운 기간 선택 시작)
