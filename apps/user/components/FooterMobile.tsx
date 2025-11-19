@@ -19,7 +19,6 @@ const FooterMobile = () => {
     <Container>
       <ContentsWrapper>
         {/* SVG 로고 렌더링 (Logo 컴포넌트) */}
-        <Logo />
         {/* StyledLogo는 Logo 컴포넌트를 스타일링하기 위해 사용 */}
         <StyledLogo />
         <InfoWrapper>
